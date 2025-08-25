@@ -21,7 +21,7 @@ const authFormSchema = (type) => {
 };
 
 const Authform = ({ type }) => {
-  const router = useRouter()
+  const router = useRouter();
   const formSchema = authFormSchema(type);
 
   // 1. Define your form.
@@ -37,35 +37,34 @@ const Authform = ({ type }) => {
   async function onSubmit(values) {
     try {
       if (type === "sign-up") {
-        const {email, name, password} = values
+        const { email, name, password } = values;
 
         const result = await signUp({
           name,
           email,
           password,
-        })
+        });
 
-        if(!result?.success) {
-          toast.error(result?.message)
-          return
+        if (!result?.success) {
+          toast.error(result?.message);
+          return;
         }
 
-        toast.success("Account Created Successfully Please Sign In.")
-        router.push('/sign-in')
+        toast.success("Account Created Successfully Please Sign In.");
+        router.push("/sign-in");
       } else {
-
-        const {email, password} = values
+        const { email, password } = values;
         const result = await signIn({
           email,
           password,
-        })
+        });
 
-        if(!result?.success) {
-          toast.error(result?.message)
-          return
+        if (!result?.success) {
+          toast.error(result?.message);
+          return;
         }
-        toast.success("Sign in Successfully.")
-        router.push('/') // change it into dashboard route
+        toast.success("Sign in Successfully.");
+        router.push("/"); // change it into dashboard route
       }
     } catch (error) {
       console.log(error);
@@ -95,13 +94,15 @@ const Authform = ({ type }) => {
 
   const isSignIn = type === "sign-in";
   return (
-    <div className="card-border min-w-[566px]">
+    <div className="card-border lg:min-w-[566px]">
       <div className="flex flex-col gap-6 card py-14 px-10">
         <div className="flex flex-row gap-2 justify-center">
           <Image src="/logo.svg" alt="logo" width={32} height={38} />
           <h2 className="text-primary-100">HireReady AI</h2>
         </div>
-        <h3>Practice for your next interview</h3>
+        <div className="text-center">
+          <h3>Practice for your next interview</h3>
+        </div>
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit, onError)}
