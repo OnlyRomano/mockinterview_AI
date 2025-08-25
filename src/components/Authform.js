@@ -10,6 +10,7 @@ import Image from "next/image";
 import { toast } from "sonner";
 import FormField from "./FormField";
 import { useRouter } from "next/navigation";
+import { signIn, signUp } from "@/lib/actions/auth.actions";
 
 const authFormSchema = (type) => {
   return z.object({
@@ -33,12 +34,36 @@ const Authform = ({ type }) => {
     },
   });
 
-  function onSubmit(values) {
+  async function onSubmit(values) {
     try {
       if (type === "sign-up") {
+        const {email, name, password} = values
+
+        const result = await signUp({
+          name,
+          email,
+          password,
+        })
+
+        if(!result?.success) {
+          toast.error(result?.message)
+          return
+        }
+
         toast.success("Account Created Successfully Please Sign In.")
         router.push('/sign-in')
       } else {
+
+        const {email, password} = values
+        const result = await signIn({
+          email,
+          password,
+        })
+
+        if(!result?.success) {
+          toast.error(result?.message)
+          return
+        }
         toast.success("Sign in Successfully.")
         router.push('/') // change it into dashboard route
       }
@@ -46,6 +71,26 @@ const Authform = ({ type }) => {
       console.log(error);
       toast.error(`Something went wrong: ${error.message}`);
     }
+  }
+
+  function onError(errors) {
+    const values = form.getValues();
+    const isSignIn = type === "sign-in";
+    const { name, email, password } = values;
+    const fields = isSignIn ? [email, password] : [name, email, password];
+
+    const allEmpty = fields.every((v) => !v || String(v).trim() === "");
+    if (allEmpty) {
+      toast.error("Please fill in all fields.");
+      return;
+    }
+
+    if (errors?.password) {
+      toast.error("Password must be at least 8 characters.");
+      return;
+    }
+
+    toast.error("Please check your inputs.");
   }
 
   const isSignIn = type === "sign-in";
@@ -59,7 +104,7 @@ const Authform = ({ type }) => {
         <h3>Practice for your next interview</h3>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit)}
+            onSubmit={form.handleSubmit(onSubmit, onError)}
             className="w-full space-y-6 mt-4 form"
           >
             {!isSignIn && (
