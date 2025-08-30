@@ -4,7 +4,8 @@ import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 import InterviewCard from "@/components/InterviewCard";
-
+import dynamic from "next/dynamic";
+import Spline3D from "@/components/Spline";
 const HomePage = () => {
   return (
     <>
@@ -19,32 +20,26 @@ const HomePage = () => {
           </Button>
         </div>
 
-        <Image
-          src={"/robot.png"}
-          alt="Robot"
-          width={400}
-          height={400}
-          className="max-sm:hidden"
-        />
+        <Spline3D/>
       </section>
-             <section className="flex flex-col gap-6 mt-8">
-         <h2>Your Interview</h2>
-         <div className="interviews-section">
-           {dummyInterviews.map((interview) => (
-             <InterviewCard {...interview} key={interview.id} />
-           ))}
-           {/* <p>You haven't taken any interviews yet</p> */}
-         </div>
-       </section>
-       <section className="flex flex-col gap-6 mt-8">
-         <h2>Take an Interview</h2>
+      <section className="flex flex-col gap-6 mt-8">
+        <h2>Your Interview</h2>
+        <div className="interviews-section">
+          {dummyInterviews.map((interview) => (
+            <InterviewCard {...interview} key={interview.id} />
+          ))}
+          {/* <p>You haven't taken any interviews yet</p> */}
+        </div>
+      </section>
+      <section className="flex flex-col gap-6 mt-8">
+        <h2>Take an Interview</h2>
 
-         <div className="interviews-section">
-           {dummyInterviews.map((interview) => (
-             <InterviewCard {...interview} key={interview.id} />
-           ))}
-         </div>
-       </section>
+        <div className="interviews-section">
+          {dummyInterviews.map((interview) => (
+            <InterviewCard {...interview} key={interview.id} />
+          ))}
+        </div>
+      </section>
     </>
   );
 };
