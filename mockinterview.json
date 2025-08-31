@@ -1,0 +1,80 @@
+{
+  "id": "ai_interview_workflow",
+  "name": "AI Mock Interview",
+  "nodes": [
+    {
+      "id": "start",
+      "name": "Start Node",
+      "type": "start",
+      "properties": {}
+    },
+    {
+      "id": "intro_node",
+      "name": "Introduction",
+      "type": "conversation",
+      "properties": {
+        "firstMessage": "Hey there! Welcome to your AI mock interview. Are you ready to begin?",
+        "prompt": "Greet the user and ask if they are ready to start the interview."
+      }
+    },
+    {
+      "id": "intro_question",
+      "name": "Self Introduction",
+      "type": "conversation",
+      "properties": {
+        "prompt": "Great! Let's start. Can you briefly introduce yourself?",
+        "capture": "intro"
+      }
+    },
+    {
+      "id": "question_1",
+      "name": "Interview Question 1",
+      "type": "conversation",
+      "properties": {
+        "prompt": "First question: Why are you interested in this role?",
+        "capture": "answer_1"
+      }
+    },
+    {
+      "id": "feedback_node",
+      "name": "Feedback API",
+      "type": "api_request",
+      "properties": {
+        "url": "https://your-backend.com/api/feedback",
+        "method": "POST",
+        "body": {
+          "intro": "{{intro}}",
+          "answers": ["{{answer_1}}"]
+        },
+        "responseMapping": {
+          "feedback": "feedback_text"
+        }
+      }
+    },
+    {
+      "id": "feedback_convo",
+      "name": "Feedback Conversation",
+      "type": "conversation",
+      "properties": {
+        "prompt": "Here’s some feedback on your interview: {{feedback_text}}"
+      }
+    },
+    {
+      "id": "end_node",
+      "name": "End Node",
+      "type": "end",
+      "properties": {
+        "message": "That’s the end of your mock interview. Thanks for practicing with me! Goodbye."
+      }
+    }
+  ],
+  "edges": [
+    { "from": "start", "to": "intro_node" },
+    { "from": "intro_node", "to": "intro_question", "condition": "yes" },
+    { "from": "intro_node", "to": "end_node", "condition": "no" },
+    { "from": "intro_question", "to": "question_1" },
+    { "from": "question_1", "to": "feedback_node" },
+    { "from": "feedback_node", "to": "feedback_convo" },
+    { "from": "feedback_convo", "to": "end_node" }
+  ]
+}
