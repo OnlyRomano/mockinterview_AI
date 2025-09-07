@@ -2,7 +2,7 @@ import dbConnect from "@/lib/db";
 import Interview from "@/lib/models/Interview";
 import { google } from "@ai-sdk/google";
 import { generateText } from "ai";
-import { isAuthenticated } from "@/lib/actions/auth.actions";
+import { isAuthenticated, getCurrentUser } from "@/lib/actions/auth.actions";
 
 export async function GET() {
   return Response.json({ success: true, data: "Thank You!" }, { status: 200 });
@@ -17,7 +17,7 @@ export async function POST(request) {
   //     { status: 401 }
   //   );
   // }
-
+const user = getCurrentUser();
   await dbConnect();
    const body = await request.json();
   console.log("Incoming request body:", body); // <-- Add this line
@@ -41,7 +41,7 @@ export async function POST(request) {
     });
 
     const interview = await Interview.create({
-      userId: userId,
+      userId: user?._id,
       role,
       type,
       level,
