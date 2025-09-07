@@ -19,7 +19,7 @@ export async function POST(request) {
   // }
 
   await dbConnect();
-  const { type, role, level, techstack, amount, userid } = await request.json();
+  const { type, role, level, techstack, amount, userId } = await request.json();
 
   try {
     const { text: questions } = await generateText({
@@ -37,9 +37,8 @@ export async function POST(request) {
             Thank You!`,
     });
 
-
     const interview = await Interview.create({
-      userId: userid,
+      userId,
       role,
       type,
       level,

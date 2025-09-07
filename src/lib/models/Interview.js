@@ -19,7 +19,7 @@ const InterviewSchema = new mongoose.Schema(
       required: true,
     },
     userId: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: String,
       required: true,
     },
     type: {
