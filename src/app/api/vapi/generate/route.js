@@ -38,7 +38,7 @@ export async function POST(request) {
     });
 
     const interview = await Interview.create({
-      userId,
+      userId: userId,
       role,
       type,
       level,
