@@ -19,7 +19,10 @@ export async function POST(request) {
   // }
 
   await dbConnect();
-  const { type, role, level, techstack, amount, userId } = await request.json();
+   const body = await request.json();
+  console.log("Incoming request body:", body); // <-- Add this line
+  const { type, role, level, techstack, amount, userId } = body;
+  console.log("userId received:", userId); // <-- And this line
 
   try {
     const { text: questions } = await generateText({
