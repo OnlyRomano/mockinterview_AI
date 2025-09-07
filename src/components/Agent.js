@@ -94,7 +94,7 @@ const Agent = ({ userName, userId, type }) => {
       });
     }
   };
-  
+
   const handleDisconnect = async () => {
     setCallStatus(CallStatus.FINISHED);
     vapi.stop();
@@ -155,7 +155,10 @@ const Agent = ({ userName, userId, type }) => {
 
         <div className="w-full flex justify-center mt-5">
           {callStatus !== "ACTIVE" ? (
-            <button className="relative btn-call cursor-pointer" onClick={handleCall}>
+            <button
+              className="relative btn-call cursor-pointer"
+              onClick={handleCall}
+            >
               <span
                 className={cn(
                   "absolute animate-ping rounded-full opacity-75",
