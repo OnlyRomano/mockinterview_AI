@@ -31,11 +31,8 @@ const Agent = ({ userName, userId, type }) => {
     const onCallEnd = () => setCallStatus(CallStatus.FINISHED);
 
     const onMessage = (message) => {
-      console.log("Received message:", message); // Debug log
       if (message.type === "transcript" && message.transcriptType === "final") {
         const newMessage = { role: message.role, content: message.transcript };
-        console.log("New Message: ", newMessage);
-
         setMessages((prev) => [...prev, newMessage]);
       }
     };

@@ -113,11 +113,6 @@ export async function getInterviewByUserId(userId) {
   try {
     await dbConnect();
 
-  if(!userId) {
-    console.log("No userId provided to getInterviewByUserId");
-    return [];
-  }
-
     const interviews = await Interview.find({ userId })
       .sort({ createdAt: -1 })
       .lean();
