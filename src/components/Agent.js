@@ -31,10 +31,12 @@ const Agent = ({ userName, userId, type }) => {
     const onCallEnd = () => setCallStatus(CallStatus.FINISHED);
 
     const onMessage = (message) => {
-      if (message.type === "transcript" && message.transcript === "final") {
-        const newMessages = { role: message.role, content: message.transcript };
+      console.log("Received message:", message); // Debug log
+      if (message.type === "transcript" && message.transcriptType === "final") {
+        const newMessage = { role: message.role, content: message.transcript };
+        console.log("New Message: ", newMessage);
 
-        setMessages((prev) => [...prev, newMessages]);
+        setMessages((prev) => [...prev, newMessage]);
       }
     };
     const onSpeachStart = () => setIsSpeaking(true);
@@ -42,25 +44,27 @@ const Agent = ({ userName, userId, type }) => {
 
     const onError = (error) => console.log("Error: ", error);
 
-    vapi.on("call_start", onCallStart);
-    vapi.on("call_end", onCallEnd);
+    vapi.on("call-start", onCallStart);
+    vapi.on("call-end", onCallEnd);
     vapi.on("message", onMessage);
-    vapi.on("speech_start", onSpeachStart);
-    vapi.on("speech_end", onSpeachEnd);
+    vapi.on("speech-start", onSpeachStart);
+    vapi.on("speech-end", onSpeachEnd);
     vapi.on("error", onError);
 
     return () => {
-      vapi.off("call_start", onCallStart);
-      vapi.off("call_end", onCallEnd);
+      vapi.off("call-start", onCallStart);
+      vapi.off("call-end", onCallEnd);
       vapi.off("message", onMessage);
-      vapi.off("speech_start", onSpeachStart);
-      vapi.off("speech_end", onSpeachEnd);
+      vapi.off("speech-start", onSpeachStart);
+      vapi.off("speech-end", onSpeachEnd);
       vapi.off("error", onError);
     };
   });
 
   useEffect(() => {
-    if (callStatus === CallStatus.FINISHED) router.push("/");
+    if (callStatus === CallStatus.FINISHED) {
+      router.push("/");
+    }
   }, [messages, callStatus, type, userId]);
 
   const handleCall = async () => {
