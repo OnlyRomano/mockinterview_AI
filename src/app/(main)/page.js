@@ -1,10 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { dummyInterviews, interviewer } from "@/constants";
-import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 import InterviewCard from "@/components/InterviewCard";
-import dynamic from "next/dynamic";
 import Spline3D from "@/components/Spline";
 import {
   getCurrentUser,
