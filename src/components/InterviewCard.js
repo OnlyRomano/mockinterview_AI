@@ -5,16 +5,17 @@ import React from "react";
 import { Button } from "./ui/button";
 import Link from "next/link";
 import DisplayTechIcons from "./DisplayTechIcons";
+import { getFeedbackByInterviewId } from "@/lib/actions/general.action";
 
-const InterviewCard = ({
-  interviewId,
+const InterviewCard = async ({
+  id,
   userId,
   role,
   type,
   techstack,
   createdAt,
 }) => {
-  const feedback = null;
+  const feedback = userId && id ? await getFeedbackByInterviewId({interviewId: id, userId}) : null;
   const normalizedTyoe = /mix/gi.test(type) ? "Mixed" : type;
   const formattedDate = dayjs(
     feedback?.createdAt || createdAt || date.now()
@@ -52,9 +53,9 @@ const InterviewCard = ({
             </div>
           </div>
 
-          <p className="line-clamp-2 mt-5">
+          <p className="line-clamp-2 mt-5" title={feedback?.finalAssessment}>
             {" "}
-            {feedback?.finalAssesment ||
+            {feedback?.finalAssessment ||
               "Yout haven't taken the interview yet. Take it now to improve your skills."}
           </p>
         </div>
@@ -64,8 +65,8 @@ const InterviewCard = ({
             <Link
               href={
                 feedback
-                  ? `/interview/${interviewId}/feedback`
-                  : `/interview/${interviewId}`
+                  ? `/interview/${id}/feedback`
+                  : `/interview/${id}`
               }
             >
               {feedback ? "Check Feedback" : "View Interview"}

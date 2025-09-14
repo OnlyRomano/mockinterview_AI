@@ -1,28 +1,29 @@
 "use server";
 
-import { generateObject } from "ai";
+import { generateId, generateObject } from "ai";
 import { google } from "@ai-sdk/google";
-
-import { connectToDatabase } from "@/lib/mongoose";
-import Feedback from "@/models/Feedback";
-import Interview from "@/models/Interview";
 import { feedbackSchema } from "@/constants";
+import dbConnect from "../db";
+import Feedback from "../models/Feedback";
+import Interview from "../models/Interview";
 
 export async function createFeedback(params) {
-  const { interviewId, userId, transcript, feedbackId } = params;
+  const { interviewId, userId, transcript } = params;
 
   try {
     const formattedTranscript = transcript
-      .map(
-        (sentence) =>
-          `- ${sentence.role}: ${sentence.content}\n`
-      )
+      .map((sentence) => `- ${sentence.role}: ${sentence.content}\n`)
       .join("");
-
-    const { object } = await generateObject({
-      model: google("gemini-2.0-flash-001", {
-        structuredOutputs: false,
-      }),
+    const {
+      object: {
+        totalScore,
+        categoryScores,
+        strengths,
+        areasForImprovement,
+        finalAssessment,
+      },
+    } = await generateObject({
+      model: google("gemini-2.0-flash-001", { structuredOutputs: false }),
       schema: feedbackSchema,
       prompt: `
         You are an AI interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories. Be thorough and detailed in your analysis. Don't be lenient with the candidate. If there are mistakes or areas for improvement, point them out.
@@ -40,44 +41,95 @@ export async function createFeedback(params) {
         "You are a professional interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories",
     });
 
-    await connectToDatabase();
-
-    const doc = {
+    const feedback = await Feedback.create({
       interviewId,
       userId,
-      totalScore: object.totalScore,
-      categoryScores: object.categoryScores,
-      strengths: object.strengths,
-      areasForImprovement: object.areasForImprovement,
-      finalAssessment: object.finalAssessment,
-      createdAt: new Date(),
+      totalScore,
+      categoryScore: categoryScores,
+      strengths,
+      areasForImprovement,
+      finalAssessment,
+    });
+
+    return {
+      success: true,
+      feedbackId: feedback.id,
     };
-
-    let id;
-    if (feedbackId) {
-      const res = await Feedback.findByIdAndUpdate(feedbackId, doc, { new: true });
-      id = String(res?._id);
-    } else {
-      const res = await Feedback.create(doc);
-      id = String(res._id);
-    }
-
-    return { success: true, feedbackId: id };
   } catch (error) {
     console.error("Error saving feedback:", error);
     return { success: false };
   }
 }
 
+// export async function createFeedback(params) {
+//   const { interviewId, userId, transcript, feedbackId } = params;
+
+//   try {
+//     const formattedTranscript = transcript
+//       .map(
+//         (sentence) =>
+//           `- ${sentence.role}: ${sentence.content}\n`
+//       )
+//       .join("");
+
+//     const { object } = await generateObject({
+//       model: google("gemini-2.0-flash-001", {
+//         structuredOutputs: false,
+//       }),
+//       schema: feedbackSchema,
+//       prompt: `
+//         You are an AI interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories. Be thorough and detailed in your analysis. Don't be lenient with the candidate. If there are mistakes or areas for improvement, point them out.
+//         Transcript:
+//         ${formattedTranscript}
+
+//         Please score the candidate from 0 to 100 in the following areas. Do not add categories other than the ones provided:
+//         - **Communication Skills**: Clarity, articulation, structured responses.
+//         - **Technical Knowledge**: Understanding of key concepts for the role.
+//         - **Problem-Solving**: Ability to analyze problems and propose solutions.
+//         - **Cultural & Role Fit**: Alignment with company values and job role.
+//         - **Confidence & Clarity**: Confidence in responses, engagement, and clarity.
+//         `,
+//       system:
+//         "You are a professional interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories",
+//     });
+
+//     await dbConnect();
+
+//     const doc = {
+//       interviewId,
+//       userId,
+//       totalScore: object.totalScore,
+//       categoryScore: object.categoryScores, // match schema field name
+//       strengths: object.strengths,
+//       areasForImprovement: object.areasForImprovement,
+//       finalAssessment: object.finalAssessment,
+//     };
+
+//     let id;
+//     if (Feedback) {
+//       const res = await Feedback.findByIdAndUpdate(feedbackId, doc, { new: true });
+//       id = String(res?._id);
+//     } else {
+//       const res = await Feedback.create(doc);
+//       id = String(res._id);
+//     }
+
+//     return { success: true, feedbackId: id };
+//   } catch (error) {
+//     console.error("Error saving feedback:", error);
+//     return { success: false };
+//   }
+// }
+
 export async function getInterviewById(id) {
   try {
-    await connectToDatabase();
+    await dbConnect();
     const interview = await Interview.findById(id).lean();
     if (!interview) return null;
 
     return {
       id: String(interview._id),
-      ...(interview),
+      ...interview,
     };
   } catch (error) {
     console.error("Error getting interview:", error);
@@ -89,7 +141,7 @@ export async function getFeedbackByInterviewId(params) {
   const { interviewId, userId } = params;
 
   try {
-    await connectToDatabase();
+    await dbConnect();
     const feedback = await Feedback.findOne({ interviewId, userId }).lean();
     if (!feedback) return null;
 
@@ -103,37 +155,43 @@ export async function getFeedbackByInterviewId(params) {
   }
 }
 
-export async function getLatestInterviews(
-  params
-) {
-  const { userId, limit = 20 } = params;
-
+export async function getInterviewByUserId(userId) {
   try {
-    await connectToDatabase();
-    const interviews = await Interview.find({ finalized: true, userId: { $ne: userId } })
-      .sort({ createdAt: -1 })
-      .limit(limit)
-      .lean();
+    await dbConnect();
 
-    return interviews.map((i) => ({ id: String(i._id), ...i }));
-  } catch (error) {
-    console.error("Error getting latest interviews:", error);
-    return null;
-  }
-}
-
-export async function getInterviewsByUserId(
-  userId
-) {
-  try {
-    await connectToDatabase();
     const interviews = await Interview.find({ userId })
       .sort({ createdAt: -1 })
       .lean();
 
-    return interviews.map((i) => ({ id: String(i._id), ...i }));
+    return interviews.map((doc) => ({
+      id: doc._id.toString(),
+      ...doc,
+    }));
   } catch (error) {
-    console.error("Error getting user interviews:", error);
-    return null;
+    console.error("Error in getInterviewByUserId:", error);
+    return [];
+  }
+}
+
+export async function getLatestInterviews(params) {
+  try {
+    const { userId, limit = 20 } = params;
+    await dbConnect();
+
+    const interviews = await Interview.find({
+      userId: { $ne: userId },
+      finalized: true,
+    })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .lean();
+
+    return interviews.map((doc) => ({
+      id: doc._id.toString(),
+      ...doc,
+    }));
+  } catch (error) {
+    console.error("Error in getLatestInterviews:", error);
+    return [];
   }
 }
