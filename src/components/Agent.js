@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { vapi } from "@/lib/vapi.sdk";
 import { interviewer } from "@/constants";
+import { createFeedback } from "@/lib/actions/general.action";
 
 const CallStatus = {
   INACTIVE: "INACTIVE",
@@ -15,6 +16,7 @@ const CallStatus = {
 };
 
 const Agent = ({ userName, userId, type, interviewId, questions }) => {
+  // console.log("Agent questions prop:", questions); 
   const router = useRouter();
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [callStatus, setCallStatus] = useState(CallStatus.INACTIVE);
@@ -61,10 +63,11 @@ const Agent = ({ userName, userId, type, interviewId, questions }) => {
 
   const handleGenerateFeedback = async (messages) => {
     console.log("Generating Feedback...");
-    const {success, id} = {
-      success: true,
-      id: 'feedback-id'
-    }
+    const {success, feedbackId: id} =  await createFeedback({
+      interviewId: interviewId,
+      userId: userId,
+      transcript: messages
+    })
 
     if(success && id) {
       router.push(`/interview/${interviewId}/feedback`);
@@ -108,9 +111,10 @@ const Agent = ({ userName, userId, type, interviewId, questions }) => {
           .join("\n");
       }
 
+      console.log("Formatted Questions:", formattedQuestions);
       await vapi.start(interviewer, {
         variableValues: {
-          questions: formattedQuestions,
+          question: formattedQuestions,
         },
       });
     }

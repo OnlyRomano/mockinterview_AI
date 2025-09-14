@@ -27,11 +27,11 @@ const FeedbackSchema = new mongoose.Schema(
             type: mongoose.Schema.Types.ObjectId,
             required: true,
         },
-        totalScre: {
+        totalScore: {
             type: Number,
             required: true,
         },
-        categoriesScore: {
+        categoryScore: {
             type: [CategorySchema],
             required: true,
         },
