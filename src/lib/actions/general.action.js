@@ -2,11 +2,10 @@
 
 import { generateObject } from "ai";
 import { google } from "@ai-sdk/google";
-
-import { connectToDatabase } from "@/lib/mongoose";
-import Feedback from "@/models/Feedback";
-import Interview from "@/models/Interview";
 import { feedbackSchema } from "@/constants";
+import dbConnect from "../db";
+import Feedback from "../models/Feedback";
+import Interview from "../models/Interview";
 
 export async function createFeedback(params) {
   const { interviewId, userId, transcript, feedbackId } = params;
@@ -71,7 +70,7 @@ export async function createFeedback(params) {
 
 export async function getInterviewById(id) {
   try {
-    await connectToDatabase();
+    await dbConnect();
     const interview = await Interview.findById(id).lean();
     if (!interview) return null;
 
@@ -103,37 +102,43 @@ export async function getFeedbackByInterviewId(params) {
   }
 }
 
-export async function getLatestInterviews(
-  params
-) {
-  const { userId, limit = 20 } = params;
-
+export async function getInterviewByUserId(userId) {
   try {
-    await connectToDatabase();
-    const interviews = await Interview.find({ finalized: true, userId: { $ne: userId } })
-      .sort({ createdAt: -1 })
-      .limit(limit)
-      .lean();
+    await dbConnect();
 
-    return interviews.map((i) => ({ id: String(i._id), ...i }));
-  } catch (error) {
-    console.error("Error getting latest interviews:", error);
-    return null;
-  }
-}
-
-export async function getInterviewsByUserId(
-  userId
-) {
-  try {
-    await connectToDatabase();
     const interviews = await Interview.find({ userId })
       .sort({ createdAt: -1 })
       .lean();
 
-    return interviews.map((i) => ({ id: String(i._id), ...i }));
+    return interviews.map((doc) => ({
+      id: doc._id.toString(),
+      ...doc,
+    }));
   } catch (error) {
-    console.error("Error getting user interviews:", error);
-    return null;
+    console.error("Error in getInterviewByUserId:", error);
+    return [];
+  }
+}
+
+export async function getLatestInterviews(params) {
+  try {
+    const { userId, limit = 20 } = params;
+    await dbConnect();
+
+    const interviews = await Interview.find({
+      userId: { $ne: userId },
+      finalized: true,
+    })
+      .sort({ createdAt: -1 })
+      .limit(limit)
+      .lean();
+
+    return interviews.map((doc) => ({
+      id: doc._id.toString(),
+      ...doc,
+    }));
+  } catch (error) {
+    console.error("Error in getLatestInterviews:", error);
+    return [];
   }
 }

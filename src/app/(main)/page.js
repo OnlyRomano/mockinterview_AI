@@ -5,9 +5,9 @@ import InterviewCard from "@/components/InterviewCard";
 import Spline3D from "@/components/Spline";
 import {
   getCurrentUser,
-  getInterviewByUserId,
-  getLatestInterviews,
 } from "@/lib/actions/auth.actions";
+
+import { getInterviewByUserId, getLatestInterviews } from "@/lib/actions/general.action";
 const HomePage = async () => {
   const user = await getCurrentUser();
 

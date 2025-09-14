@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { vapi } from "@/lib/vapi.sdk";
+import { interviewer } from "@/constants";
 
 const CallStatus = {
   INACTIVE: "INACTIVE",
@@ -13,7 +14,7 @@ const CallStatus = {
   FINISHED: "FINISHED",
 };
 
-const Agent = ({ userName, userId, type }) => {
+const Agent = ({ userName, userId, type, interviewId, questions }) => {
   const router = useRouter();
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [callStatus, setCallStatus] = useState(CallStatus.INACTIVE);
@@ -58,9 +59,28 @@ const Agent = ({ userName, userId, type }) => {
     };
   });
 
+  const handleGenerateFeedback = async (messages) => {
+    console.log("Generating Feedback...");
+    const {success, id} = {
+      success: true,
+      id: 'feedback-id'
+    }
+
+    if(success && id) {
+      router.push(`/interview/${interviewId}/feedback`);
+    } else {
+      console.log("Error on saving feedback")
+      router.push("/");
+    }
+  }
+
   useEffect(() => {
     if (callStatus === CallStatus.FINISHED) {
-      router.push("/");
+      if(type === "generate") {
+        router.push("/");
+      } else {
+        handleGenerateFeedback(messages);
+      }
     }
   }, [messages, callStatus, type, userId]);
 
