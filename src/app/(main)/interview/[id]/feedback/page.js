@@ -21,7 +21,6 @@ const page = async ({ params }) => {
     userId: user?.id,
   });
 
-  console.log(feedback);
   return (
     <section className="section-feedback backdrop-blur-md p-4">
       <div className="flex flex-row justify-center">
