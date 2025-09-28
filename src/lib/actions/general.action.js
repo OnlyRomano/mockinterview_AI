@@ -8,12 +8,16 @@ import Feedback from "../models/Feedback";
 import Interview from "../models/Interview";
 
 export async function createFeedback(params) {
-  const { interviewId, userId, transcript } = params;
+  const { interviewId, userId, transcript, feedbackId } = params;
 
   try {
+    // ensure DB connection
+    await dbConnect();
+
     const formattedTranscript = transcript
       .map((sentence) => `- ${sentence.role}: ${sentence.content}\n`)
       .join("");
+
     const {
       object: {
         totalScore,
@@ -41,7 +45,7 @@ export async function createFeedback(params) {
         "You are a professional interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories",
     });
 
-    const feedback = await Feedback.create({
+    const doc = {
       interviewId,
       userId,
       totalScore,
@@ -49,11 +53,28 @@ export async function createFeedback(params) {
       strengths,
       areasForImprovement,
       finalAssessment,
-    });
+    };
+
+    let res;
+    if (feedbackId) {
+      // Try to update the provided feedback id
+      res = await Feedback.findByIdAndUpdate(feedbackId, doc, { new: true });
+      if (!res) {
+        // If not found, create a new document
+        res = await Feedback.create(doc);
+      }
+    } else {
+      // Ensure single feedback per (interviewId, userId) by upserting
+      res = await Feedback.findOneAndUpdate(
+        { interviewId, userId },
+        doc,
+        { upsert: true, new: true, setDefaultsOnInsert: true }
+      );
+    }
 
     return {
       success: true,
-      feedbackId: feedback.id,
+      feedbackId: String(res._id),
     };
   } catch (error) {
     console.error("Error saving feedback:", error);
