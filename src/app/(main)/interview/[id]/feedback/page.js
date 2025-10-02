@@ -22,7 +22,7 @@ const page = async ({ params }) => {
   });
 
   return (
-    <section className="section-feedback backdrop-blur-md p-4">
+    <section className="section-feedback backdrop-blur-md p-4 rounded-2xl">
       <div className="flex flex-row justify-center">
         <h1 className="text-4xl font-semibold">
           Feedback on the Interview -{" "}
