@@ -1,12 +1,14 @@
 "use client";
 import { cn } from "@/lib/utils";
-import { set } from "mongoose";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { vapi } from "@/lib/vapi.sdk";
 import { interviewer } from "@/constants";
 import { createFeedback } from "@/lib/actions/general.action";
+import FaceDetection from "./FaceDetection";
+import { useFaceDetection } from "@/hooks/useFaceDetection";
+import PropTypes from "prop-types";
 
 const CallStatus = {
   INACTIVE: "INACTIVE",
@@ -16,18 +18,11 @@ const CallStatus = {
 };
 
 const Agent = ({ userName, userId, type, interviewId, questions }) => {
-  // console.log("Agent questions prop:", questions); 
   const router = useRouter();
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [callStatus, setCallStatus] = useState(CallStatus.INACTIVE);
   const [messages, setMessages] = useState([]);
-
-  // const callStatus = CallStatus.FINISHED;
-  // const isSpeaking = true; // Example state, replace with actual logic
-  // const messages = [
-  //   "Whats your name?",
-  //   "My Name is John Doe, Nice to meet you!",
-  // ]; // Example messages, replace with actual logic
+  const { processFaceData, startTracking, stopTracking } = useFaceDetection();
 
   useEffect(() => {
     const onCallStart = () => setCallStatus(CallStatus.ACTIVE);
@@ -63,23 +58,28 @@ const Agent = ({ userName, userId, type, interviewId, questions }) => {
 
   const handleGenerateFeedback = async (messages) => {
     console.log("Generating Feedback...");
-    const {success, feedbackId: id} =  await createFeedback({
+
+    // Stop face detection and get aggregated data
+    const faceDetectionData = stopTracking();
+
+    const { success, feedbackId: id } = await createFeedback({
       interviewId: interviewId,
       userId: userId,
-      transcript: messages
-    })
+      transcript: messages,
+      faceDetectionData: faceDetectionData,
+    });
 
-    if(success && id) {
+    if (success && id) {
       router.push(`/interview/${interviewId}/feedback`);
     } else {
-      console.log("Error on saving feedback")
+      console.log("Error on saving feedback");
       router.push("/");
     }
-  }
+  };
 
   useEffect(() => {
     if (callStatus === CallStatus.FINISHED) {
-      if(type === "generate") {
+      if (type === "generate") {
         router.push("/");
       } else {
         handleGenerateFeedback(messages);
@@ -89,6 +89,9 @@ const Agent = ({ userName, userId, type, interviewId, questions }) => {
 
   const handleCall = async () => {
     setCallStatus(CallStatus.CONNECTING);
+
+    // Start face detection tracking
+    startTracking();
 
     if (type === "generate") {
       await vapi.start(
@@ -131,6 +134,7 @@ const Agent = ({ userName, userId, type, interviewId, questions }) => {
   return (
     <>
       <div className="call-view">
+        {/* AI intervier */}
         <div className="card-interviewer">
           <div className="avatar">
             <Image
@@ -145,18 +149,35 @@ const Agent = ({ userName, userId, type, interviewId, questions }) => {
           </div>
           <h3>AI interviewer</h3>
         </div>
-        <div className="card-border">
-          <div className="card-content">
-            <Image
-              src={"/user-avatar.png"}
-              alt="User Avatar"
-              width={30}
-              height={30}
-              className="object-cover rounded-full size-[120px]"
-            />
-            <h3>{userName}</h3>
+        {/* User */}
+        {type === "generate" && (
+          <div className="card-border">
+            <div className="card-content">
+              <Image
+                src={"/user-avatar.png"}
+                alt="User Avatar"
+                width={30}
+                height={30}
+                className="object-cover rounded-full size-[120px]"
+              />
+              <h3>{userName}</h3>
+            </div>
           </div>
-        </div>
+        )}
+        {/* Face Detection Component - keep mounted; control camera via isActive */}
+        {type !== "generate" && (
+          <div className="card-border">
+            <div className="card-content">
+              <FaceDetection
+                onFaceData={processFaceData}
+                isActive={
+                  callStatus === CallStatus.ACTIVE ||
+                  callStatus === CallStatus.CONNECTING
+                }
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       <div>
@@ -206,3 +227,11 @@ const Agent = ({ userName, userId, type, interviewId, questions }) => {
 };
 
 export default Agent;
+
+Agent.propTypes = {
+  userName: PropTypes.string,
+  userId: PropTypes.string,
+  type: PropTypes.string,
+  interviewId: PropTypes.string,
+  questions: PropTypes.arrayOf(PropTypes.string),
+};

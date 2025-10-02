@@ -1,6 +1,6 @@
 "use server";
 
-import { generateId, generateObject } from "ai";
+import { generateObject } from "ai";
 import { google } from "@ai-sdk/google";
 import { feedbackSchema } from "@/constants";
 import dbConnect from "../db";
@@ -8,7 +8,7 @@ import Feedback from "../models/Feedback";
 import Interview from "../models/Interview";
 
 export async function createFeedback(params) {
-  const { interviewId, userId, transcript, feedbackId } = params;
+  const { interviewId, userId, transcript, feedbackId, faceDetectionData } = params;
 
   try {
     // ensure DB connection
@@ -17,6 +17,28 @@ export async function createFeedback(params) {
     const formattedTranscript = transcript
       .map((sentence) => `- ${sentence.role}: ${sentence.content}\n`)
       .join("");
+
+    const faceSummary = (() => {
+      if (!faceDetectionData) return "";
+      const base = `Face Detection Summary:`;
+      if (!faceDetectionData.isDetected) {
+        return `\n${base} No reliable face detected during the call.`;
+      }
+      const parts = [];
+      parts.push(`Avg confidence ${(faceDetectionData.averageConfidence * 100).toFixed(1)}%`);
+      parts.push(`Dominant expression ${faceDetectionData.dominantExpression}`);
+      parts.push(`Duration ${(faceDetectionData.faceDetectionDuration/1000).toFixed(1)}s over ${faceDetectionData.faceDetectionSamples} samples`);
+      if (typeof faceDetectionData.lookingAwayRatio === 'number') {
+        parts.push(`Looking away ${(faceDetectionData.lookingAwayRatio * 100).toFixed(1)}% of time`);
+      }
+      if (typeof faceDetectionData.multiPersonRatio === 'number') {
+        parts.push(`Multiple people visible ${(faceDetectionData.multiPersonRatio * 100).toFixed(1)}% of time`);
+      }
+      if (typeof faceDetectionData.gazeAwayRatio === 'number') {
+        parts.push(`Eyes off-screen/reading ${(faceDetectionData.gazeAwayRatio * 100).toFixed(1)}% of time`);
+      }
+      return `\n${base} ${parts.join('; ')}`;
+    })();
 
     const {
       object: {
@@ -34,16 +56,19 @@ export async function createFeedback(params) {
         Transcript:
         ${formattedTranscript}
 
+        ${faceSummary}
+
         Please score the candidate from 0 to 100 in the following areas. Do not add categories other than the ones provided:
         - **Communication Skills**: Clarity, articulation, structured responses.
         - **Technical Knowledge**: Understanding of key concepts for the role.
         - **Problem-Solving**: Ability to analyze problems and propose solutions.
         - **Cultural & Role Fit**: Alignment with company values and job role.
-        - **Confidence & Clarity**: Confidence in responses, engagement, and clarity.
+        - **Confidence & Clarity**: Confidence in responses, engagement, and clarity. Consider Face Detection Summary only as a soft signal for engagement (eye contact, attention, presence of other people). Do not overweight it.
         `,
       system:
         "You are a professional interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories",
     });
+
 
     const doc = {
       interviewId,
