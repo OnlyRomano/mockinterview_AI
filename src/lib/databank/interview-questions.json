@@ -1,0 +1,646 @@
+{
+  "questions": [
+    {
+      "level": "entry",
+      "techstack": "JavaScript",
+      "type": "technical",
+      "question": "What is JavaScript and what is it used for?"
+    },
+    {
+      "level": "entry",
+      "techstack": "JavaScript",
+      "type": "technical",
+      "question": "What is the difference between var, let, and const?"
+    },
+    {
+      "level": "entry",
+      "techstack": "JavaScript",
+      "type": "technical",
+      "question": "What is a function in JavaScript?"
+    },
+    {
+      "level": "entry",
+      "techstack": "JavaScript",
+      "type": "technical",
+      "question": "What is the DOM and how do you access elements in it?"
+    },
+    {
+      "level": "junior",
+      "techstack": "JavaScript",
+      "type": "technical",
+      "question": "What is a closure in JavaScript?"
+    },
+    {
+      "level": "junior",
+      "techstack": "JavaScript",
+      "type": "technical",
+      "question": "Explain the difference between '==' and '===' in JavaScript."
+    },
+    {
+      "level": "junior",
+      "techstack": "JavaScript",
+      "type": "technical",
+      "question": "What is hoisting in JavaScript?"
+    },
+    {
+      "level": "junior",
+      "techstack": "JavaScript",
+      "type": "technical",
+      "question": "What are arrow functions and how do they differ from regular functions?"
+    },
+    {
+      "level": "mid",
+      "techstack": "JavaScript",
+      "type": "technical",
+      "question": "Explain the event loop in JavaScript."
+    },
+    {
+      "level": "mid",
+      "techstack": "JavaScript",
+      "type": "mixed",
+      "question": "What are Promises and how do you handle asynchronous operations?"
+    },
+    {
+      "level": "mid",
+      "techstack": "JavaScript",
+      "type": "technical",
+      "question": "What is the difference between call, apply, and bind?"
+    },
+    {
+      "level": "mid",
+      "techstack": "JavaScript",
+      "type": "technical",
+      "question": "Explain prototypal inheritance in JavaScript."
+    },
+    {
+      "level": "senior",
+      "techstack": "JavaScript",
+      "type": "mixed",
+      "question": "How would you implement a custom Promise from scratch?"
+    },
+    {
+      "level": "senior",
+      "techstack": "JavaScript",
+      "type": "technical",
+      "question": "Explain memory management and garbage collection in JavaScript."
+    },
+    {
+      "level": "senior",
+      "techstack": "JavaScript",
+      "type": "mixed",
+      "question": "How would you optimize a JavaScript application for performance?"
+    },
+    {
+      "level": "entry",
+      "techstack": "React",
+      "type": "technical",
+      "question": "What is React and why would you use it?"
+    },
+    {
+      "level": "entry",
+      "techstack": "React",
+      "type": "technical",
+      "question": "What is JSX in React?"
+    },
+    {
+      "level": "entry",
+      "techstack": "React",
+      "type": "technical",
+      "question": "What is a component in React?"
+    },
+    {
+      "level": "entry",
+      "techstack": "React",
+      "type": "technical",
+      "question": "What is the difference between functional and class components?"
+    },
+    {
+      "level": "junior",
+      "techstack": "React",
+      "type": "technical",
+      "question": "What is state in React and how do you manage it?"
+    },
+    {
+      "level": "junior",
+      "techstack": "React",
+      "type": "technical",
+      "question": "What are props in React?"
+    },
+    {
+      "level": "junior",
+      "techstack": "React",
+      "type": "technical",
+      "question": "What is the virtual DOM and how does it work?"
+    },
+    {
+      "level": "junior",
+      "techstack": "React",
+      "type": "technical",
+      "question": "What are React hooks and why were they introduced?"
+    },
+    {
+      "level": "mid",
+      "techstack": "React",
+      "type": "technical",
+      "question": "Explain the React component lifecycle methods."
+    },
+    {
+      "level": "mid",
+      "techstack": "React",
+      "type": "technical",
+      "question": "What is the difference between useEffect and useLayoutEffect?"
+    },
+    {
+      "level": "mid",
+      "techstack": "React",
+      "type": "mixed",
+      "question": "How do you handle forms in React?"
+    },
+    {
+      "level": "mid",
+      "techstack": "React",
+      "type": "mixed",
+      "question": "What is React Context and when would you use it?"
+    },
+    {
+      "level": "senior",
+      "techstack": "React",
+      "type": "mixed",
+      "question": "How would you optimize a large-scale React application for performance?"
+    },
+    {
+      "level": "senior",
+      "techstack": "React",
+      "type": "technical",
+      "question": "Explain React's reconciliation algorithm and how it works."
+    },
+    {
+      "level": "senior",
+      "techstack": "React",
+      "type": "mixed",
+      "question": "How would you implement a custom hook for data fetching with caching?"
+    },
+    {
+      "level": "entry",
+      "techstack": "Node.js",
+      "question": "What is Node.js and what is it used for?",
+      "type": "technical"
+    },
+    {
+      "level": "entry",
+      "techstack": "Node.js",
+      "question": "What is npm and how do you use it?",
+      "type": "technical"
+    },
+    {
+      "level": "entry",
+      "techstack": "Node.js",
+      "question": "What is the difference between Node.js and browser JavaScript?",
+      "type": "technical"
+    },
+    {
+      "level": "junior",
+      "techstack": "Node.js",
+      "question": "What is the event loop in Node.js?",
+      "type": "technical"
+    },
+    {
+      "level": "junior",
+      "techstack": "Node.js",
+      "question": "What are modules in Node.js and how do you create them?",
+      "type": "mixed"
+    },
+    {
+      "level": "junior",
+      "techstack": "Node.js",
+      "question": "What is the difference between require and import in Node.js?",
+      "type": "technical"
+    },
+    {
+      "level": "mid",
+      "techstack": "Node.js",
+      "question": "How do you handle errors in Node.js applications?",
+      "type": "technical"
+    },
+    {
+      "level": "mid",
+      "techstack": "Node.js",
+      "question": "What is middleware in Express.js and how do you create custom middleware?",
+      "type": "mixed"
+    },
+    {
+      "level": "mid",
+      "techstack": "Node.js",
+      "question": "How do you implement authentication in a Node.js application?",
+      "type": "mixed"
+    },
+    {
+      "level": "senior",
+      "techstack": "Node.js",
+      "question": "How would you scale a Node.js application to handle millions of requests?",
+      "type": "mixed"
+    },
+    {
+      "level": "senior",
+      "techstack": "Node.js",
+      "question": "Explain clustering and load balancing in Node.js.",
+      "type": "technical"
+    },
+    {
+      "level": "entry",
+      "techstack": "Python",
+      "question": "What is Python and what are its main features?",
+      "type": "technical"
+    },
+    {
+      "level": "entry",
+      "techstack": "Python",
+      "question": "What are the different data types in Python?",
+      "type": "technical"
+    },
+    {
+      "level": "entry",
+      "techstack": "Python",
+      "question": "What is the difference between a list and a tuple in Python?",
+      "type": "technical"
+    },
+    {
+      "level": "junior",
+      "techstack": "Python",
+      "question": "What is a dictionary in Python and how do you use it?",
+      "type": "technical"
+    },
+    {
+      "level": "junior",
+      "techstack": "Python",
+      "question": "What are list comprehensions in Python?",
+      "type": "technical"
+    },
+    {
+      "level": "junior",
+      "techstack": "Python",
+      "question": "What is the difference between 'is' and '==' in Python?",
+      "type": "technical"
+    },
+    {
+      "level": "mid",
+      "techstack": "Python",
+      "question": "What are decorators in Python and how do you create them?",
+      "type": "mixed"
+    },
+    {
+      "level": "mid",
+      "techstack": "Python",
+      "question": "What is the Global Interpreter Lock (GIL) in Python?",
+      "type": "technical"
+    },
+    {
+      "level": "mid",
+      "techstack": "Python",
+      "question": "How do you handle exceptions in Python?",
+      "type": "technical"
+    },
+    {
+      "level": "senior",
+      "techstack": "Python",
+      "question": "How would you optimize Python code for performance?",
+      "type": "mixed"
+    },
+    {
+      "level": "senior",
+      "techstack": "Python",
+      "question": "Explain Python's memory management and garbage collection.",
+      "type": "technical"
+    },
+    {
+      "level": "entry",
+      "techstack": "SQL",
+      "question": "What is SQL and what is it used for?",
+      "type": "technical"
+    },
+    {
+      "level": "entry",
+      "techstack": "SQL",
+      "question": "What is the difference between a database and a table?",
+      "type": "technical"
+    },
+    {
+      "level": "entry",
+      "techstack": "SQL",
+      "question": "What are the basic SQL commands for data manipulation?",
+      "type": "technical"
+    },
+    {
+      "level": "junior",
+      "techstack": "SQL",
+      "question": "What is the difference between INNER JOIN and LEFT JOIN?",
+      "type": "technical"
+    },
+    {
+      "level": "junior",
+      "techstack": "SQL",
+      "question": "What is a primary key and why is it important?",
+      "type": "technical"
+    },
+    {
+      "level": "junior",
+      "techstack": "SQL",
+      "question": "What is the difference between WHERE and HAVING clauses?",
+      "type": "technical"
+    },
+    {
+      "level": "mid",
+      "techstack": "SQL",
+      "question": "What are indexes in SQL and how do they improve performance?",
+      "type": "behavioral"
+    },
+    {
+      "level": "mid",
+      "techstack": "SQL",
+      "question": "What is database normalization and why is it important?",
+      "type": "technical"
+    },
+    {
+      "level": "mid",
+      "techstack": "SQL",
+      "question": "What are stored procedures and when would you use them?",
+      "type": "mixed"
+    },
+    {
+      "level": "senior",
+      "techstack": "SQL",
+      "question": "How would you optimize a slow-running SQL query?",
+      "type": "mixed"
+    },
+    {
+      "level": "senior",
+      "techstack": "SQL",
+      "question": "Explain different types of database locks and their implications.",
+      "type": "technical"
+    },
+    {
+      "level": "entry",
+      "techstack": "CSS",
+      "question": "What is CSS and what is it used for?",
+      "type": "technical"
+    },
+    {
+      "level": "entry",
+      "techstack": "CSS",
+      "question": "What is the difference between inline, internal, and external CSS?",
+      "type": "technical"
+    },
+    {
+      "level": "entry",
+      "techstack": "CSS",
+      "question": "What are CSS selectors and how do you use them?",
+      "type": "technical"
+    },
+    {
+      "level": "junior",
+      "techstack": "CSS",
+      "question": "What is the CSS box model?",
+      "type": "technical"
+    },
+    {
+      "level": "junior",
+      "techstack": "CSS",
+      "question": "What is the difference between margin and padding?",
+      "type": "technical"
+    },
+    {
+      "level": "junior",
+      "techstack": "CSS",
+      "question": "What are CSS flexbox and grid layouts?",
+      "type": "technical"
+    },
+    {
+      "level": "mid",
+      "techstack": "CSS",
+      "question": "What is CSS specificity and how does it work?",
+      "type": "technical"
+    },
+    {
+      "level": "mid",
+      "techstack": "CSS",
+      "question": "What are CSS preprocessors and what are their benefits?",
+      "type": "technical"
+    },
+    {
+      "level": "mid",
+      "techstack": "CSS",
+      "question": "How do you create responsive designs with CSS?",
+      "type": "mixed"
+    },
+    {
+      "level": "senior",
+      "techstack": "CSS",
+      "question": "How would you optimize CSS for performance in a large application?",
+      "type": "mixed"
+    },
+    {
+      "level": "senior",
+      "techstack": "CSS",
+      "question": "Explain CSS-in-JS and its trade-offs compared to traditional CSS.",
+      "type": "technical"
+    },
+    {
+      "level": "entry",
+      "techstack": "HTML",
+      "question": "What is HTML and what is it used for?",
+      "type": "technical"
+    },
+    {
+      "level": "entry",
+      "techstack": "HTML",
+      "question": "What is the difference between HTML and XHTML?",
+      "type": "technical"
+    },
+    {
+      "level": "entry",
+      "techstack": "HTML",
+      "question": "What are HTML semantic elements and why are they important?",
+      "type": "technical"
+    },
+    {
+      "level": "junior",
+      "techstack": "HTML",
+      "question": "What is the difference between div and span elements?",
+      "type": "technical"
+    },
+    {
+      "level": "junior",
+      "techstack": "HTML",
+      "question": "What are HTML forms and how do you create them?",
+      "type": "mixed"
+    },
+    {
+      "level": "junior",
+      "techstack": "HTML",
+      "question": "What is accessibility in HTML and why is it important?",
+      "type": "technical"
+    },
+    {
+      "level": "mid",
+      "techstack": "HTML",
+      "question": "What are HTML5 APIs and how do you use them?",
+      "type": "technical"
+    },
+    {
+      "level": "mid",
+      "techstack": "HTML",
+      "question": "What is the difference between localStorage and sessionStorage?",
+      "type": "technical"
+    },
+    {
+      "level": "mid",
+      "techstack": "HTML",
+      "question": "How do you implement progressive web app features with HTML?",
+      "type": "mixed"
+    },
+    {
+      "level": "senior",
+      "techstack": "HTML",
+      "question": "How would you optimize HTML for SEO and performance?",
+      "type": "mixed"
+    },
+    {
+      "level": "senior",
+      "techstack": "HTML",
+      "question": "Explain web components and how they work with HTML.",
+      "type": "technical"
+    },
+    {
+      "level": "entry",
+      "techstack": "Git",
+      "question": "What is Git and what is it used for?",
+      "type": "technical"
+    },
+    {
+      "level": "entry",
+      "techstack": "Git",
+      "question": "What is the difference between Git and GitHub?",
+      "type": "technical"
+    },
+    {
+      "level": "entry",
+      "techstack": "Git",
+      "question": "What are the basic Git commands for version control?",
+      "type": "technical"
+    },
+    {
+      "level": "junior",
+      "techstack": "Git",
+      "question": "What is the difference between git pull and git fetch?",
+      "type": "technical"
+    },
+    {
+      "level": "junior",
+      "techstack": "Git",
+      "question": "What is a branch in Git and how do you create one?",
+      "type": "mixed"
+    },
+    {
+      "level": "junior",
+      "techstack": "Git",
+      "question": "What is the difference between git merge and git rebase?",
+      "type": "technical"
+    },
+    {
+      "level": "mid",
+      "techstack": "Git",
+      "question": "What is a Git conflict and how do you resolve it?",
+      "type": "behavioral"
+    },
+    {
+      "level": "mid",
+      "techstack": "Git",
+      "question": "What is Git stash and when would you use it?",
+      "type": "mixed"
+    },
+    {
+      "level": "mid",
+      "techstack": "Git",
+      "question": "What are Git hooks and how do you use them?",
+      "type": "technical"
+    },
+    {
+      "level": "senior",
+      "techstack": "Git",
+      "question": "How would you implement a Git workflow for a large team?",
+      "type": "behavioral"
+    },
+    {
+      "level": "senior",
+      "techstack": "Git",
+      "question": "Explain Git's internal architecture and how it stores data.",
+      "type": "technical"
+    },
+    {
+      "level": "entry",
+      "techstack": "TypeScript",
+      "question": "What is TypeScript and what are its benefits?",
+      "type": "technical"
+    },
+    {
+      "level": "entry",
+      "techstack": "TypeScript",
+      "question": "What is the difference between TypeScript and JavaScript?",
+      "type": "technical"
+    },
+    {
+      "level": "entry",
+      "techstack": "TypeScript",
+      "question": "What are types in TypeScript?",
+      "type": "technical"
+    },
+    {
+      "level": "junior",
+      "techstack": "TypeScript",
+      "question": "What are interfaces in TypeScript and how do you use them?",
+      "type": "technical"
+    },
+    {
+      "level": "junior",
+      "techstack": "TypeScript",
+      "question": "What is the difference between 'any' and 'unknown' types?",
+      "type": "technical"
+    },
+    {
+      "level": "junior",
+      "techstack": "TypeScript",
+      "question": "What are generics in TypeScript?",
+      "type": "technical"
+    },
+    {
+      "level": "mid",
+      "techstack": "TypeScript",
+      "question": "What are union types and intersection types in TypeScript?",
+      "type": "technical"
+    },
+    {
+      "level": "mid",
+      "techstack": "TypeScript",
+      "question": "What are type guards and how do you implement them?",
+      "type": "mixed"
+    },
+    {
+      "level": "mid",
+      "techstack": "TypeScript",
+      "question": "What are decorators in TypeScript and how do you use them?",
+      "type": "technical"
+    },
+    {
+      "level": "senior",
+      "techstack": "TypeScript",
+      "question": "How would you implement advanced type patterns in TypeScript?",
+      "type": "mixed"
+    },
+    {
+      "level": "senior",
+      "techstack": "TypeScript",
+      "question": "Explain TypeScript's module system and declaration merging.",
+      "type": "technical"
+    }
+  ]
+}
