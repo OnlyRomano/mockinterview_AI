@@ -1,0 +1,107 @@
+flowchart TD
+    %% Start
+    A([User Opens App]) --> B{Has an account?}
+
+    %% Authentication Flow
+    B -->|Yes| C[Go to Sign-In Page]
+    B -->|No| D[Go to Sign-Up Page]
+
+    C --> E[Authform Component]
+    D --> E
+    E --> F[Validate Credentials with MD5 Hash]
+    F --> G{Valid Credentials?}
+    G -->|No| H[Show Error Message]
+    H --> E
+    G -->|Yes| I[Create/Update Iron Session]
+
+    %% Session Handling
+    I --> J[Middleware: Session Validation]
+    J --> K{Valid Session?}
+    K -->|No| C
+    K -->|Yes| L[Access Dashboard]
+
+    %% Dashboard Flow
+    L --> M[View InterviewCard Components]
+    L --> N[View DisplayTechIcons]
+    L --> O[Create New Interview]
+
+    %% Interview Creation Flow
+    O --> P[Fill Interview Form in Agent Component]
+    P --> Q[Submit to /api/vapi/generate]
+    Q --> Q1[Query Interview Questions Databank]
+    Q1 --> Q2[Filter Questions by Level, Tech Stack & Type]
+    Q2 --> R[Google AI SDK - Generate Questions with Databank Reference]
+    R --> S[Save Interview to MongoDB]
+    S --> T[Redirect to Interview Page]
+
+    %% Interview Execution Flow
+    T --> U[Load Interview Details]
+    U --> V[Initialize Agent Component]
+    V --> W[Start Face Detection with Face-API.js]
+    W --> X[Initialize VAPI Connection]
+    X --> Y[Begin AI Interview]
+
+    %% Interview Process
+    Y --> Z[AI Asks Questions via VAPI]
+    Z --> AA[User Responds with Voice]
+    AA --> BB[Face Detection Analysis]
+    BB --> CC[Transcript Collection]
+    CC --> DD{Interview Complete?}
+    DD -->|No| Z
+    DD -->|Yes| EE[Stop Face Detection]
+    EE --> FF[Generate Feedback]
+
+    %% Feedback Generation
+    FF --> GG[Google AI SDK - Analyze Transcript]
+    GG --> HH[Process Face Detection Data]
+    HH --> II[Calculate Scores & Assessment]
+    II --> JJ[Save Feedback to MongoDB]
+    JJ --> KK[Redirect to Feedback Page]
+
+    %% Feedback Display
+    KK --> LL[Display Overall Score]
+    LL --> MM[Show Category Breakdown]
+    MM --> NN[Display Strengths & Improvements]
+    NN --> OO{User Action?}
+    OO -->|Retake| T
+    OO -->|Dashboard| L
+
+    %% Database & External Services
+    S --> PP[(MongoDB Database)]
+    JJ --> PP
+    Q1 --> WWW[(Interview Questions Databank)]
+    PP --> QQ[User Model]
+    PP --> RR[Interview Model]
+    PP --> SS[Feedback Model]
+
+    %% External AI Services
+    R --> TT[Google AI SDK - Gemini 2.0]
+    GG --> TT
+    X --> UU[VAPI AI Service]
+    W --> VV[Face-API.js Models]
+
+    %% Error Handling
+    Q --> WW{API Success?}
+    WW -->|No| XX[Show Error Message]
+    XX --> P
+    WW -->|Yes| S
+
+    FF --> YY{Feedback Success?}
+    YY -->|No| ZZ[Show Error Message]
+    ZZ --> KK
+    YY -->|Yes| JJ
+
+    %% Styles
+    classDef startend fill:#DFFFE0,stroke:#28a745,color:#21512A,stroke-width:2px;
+    classDef decision fill:#FFF5CC,stroke:#E3B341,color:#8B6508,stroke-width:2px;
+    classDef process fill:#D0E8FF,stroke:#0366d6,color:#0366d6;
+    classDef data fill:#FFE8CC,stroke:#FF8C00,color:#A85700;
+    classDef error fill:#FFE6E6,stroke:#DC3545,color:#721C24,stroke-width:2px;
+    classDef ai fill:#E8F5E8,stroke:#28a745,color:#155724,stroke-width:2px;
+
+    class A,OO startend;
+    class B,G,K,DD,WW,YY decision;
+    class C,D,E,F,H,I,J,L,M,N,O,P,Q1,Q2,T,U,V,W,X,Y,Z,AA,BB,CC,EE,FF,HH,II,JJ,KK,LL,MM,NN,XX,ZZ process;
+    class PP,QQ,RR,SS,WWW data;
+    class H,XX,ZZ error;
+    class R,GG,TT,UU,VV ai;
