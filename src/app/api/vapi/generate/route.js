@@ -3,37 +3,7 @@ import Interview from "@/lib/models/Interview";
 import { google } from "@ai-sdk/google";
 import { generateText } from "ai";
 import { isAuthenticated } from "@/lib/actions/auth.actions";
-import interviewQuestions from "@/lib/databank/interview-questions.json";
-
-// Helper function to get reference questions from databank for AI generation
-function getReferenceQuestionsFromDatabank(level, techstack, type) {
-  const techstackArray = techstack.split(",").map(tech => tech.trim());
-  
-  // Filter questions based on level, techstack, and type
-  const filteredQuestions = interviewQuestions.questions.filter(q => 
-    q.level === level && 
-    q.type === type &&
-    techstackArray.some(tech => 
-      q.techstack.toLowerCase().includes(tech.toLowerCase()) ||
-      tech.toLowerCase().includes(q.techstack.toLowerCase())
-    )
-  );
-  
-  // If no questions found for the specific type, fall back to any type for the level and techstack
-  if (filteredQuestions.length === 0) {
-    const fallbackQuestions = interviewQuestions.questions.filter(q => 
-      q.level === level && 
-      techstackArray.some(tech => 
-        q.techstack.toLowerCase().includes(tech.toLowerCase()) ||
-        tech.toLowerCase().includes(q.techstack.toLowerCase())
-      )
-    );
-    return fallbackQuestions.map(q => q.question);
-  }
-  
-  // Return reference questions for AI to use as inspiration
-  return filteredQuestions.map(q => q.question);
-}
+import questionIndexer from "@/lib/databank/questionIndexer";
 
 export async function GET() {
   return Response.json({ success: true, data: "Thank You!" }, { status: 200 });
@@ -45,7 +15,7 @@ export async function POST(request) {
 
   try {
     // Get reference questions from databank to guide AI generation
-    const referenceQuestions = getReferenceQuestionsFromDatabank(level, techstack, type);
+    const referenceQuestions = questionIndexer.getReferenceQuestions(level, techstack, type);
     
     // Create a comprehensive prompt that includes reference questions
     const referenceQuestionsText = referenceQuestions.length > 0 
