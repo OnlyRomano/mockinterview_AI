@@ -23,7 +23,7 @@ export async function POST(request) {
       : '';
     
     const { text: questions } = await generateText({
-      model: google("gemini-2.0-flash-001"),
+      model: google("gemini-2.5-flash-lite"),
       prompt: `Prepare EXACTLY ${amount} interview question(s) for a job interview.
             The job role is ${role}.
             The experience level is ${level}.
