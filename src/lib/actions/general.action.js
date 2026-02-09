@@ -2,146 +2,99 @@
 
 import { generateObject, generateText } from "ai";
 import { google } from "@ai-sdk/google";
-import { feedbackNarrativeSchema } from "@/constants";
+import { feedbackSchema } from "@/constants";
 import dbConnect from "../db";
 import Feedback from "../models/Feedback";
 import Interview from "../models/Interview";
 import questionIndexer from "../databank/questionIndexer";
-import { scoreFeedbackDeterministic } from "../scoring/feedbackScorer";
+import { computeFaceDetectionScore } from "../scoring/feedbackScorer";
 
 export async function createFeedback(params) {
   const { interviewId, userId, transcript, feedbackId, faceDetectionData } =
     params;
 
   try {
-    // ensure DB connection
     await dbConnect();
 
-    const interview = await Interview.findById(interviewId).lean();
-
-    const {
-      totalScore,
-      categoryScores,
-      strengths: deterministicStrengths,
-      areasForImprovement: deterministicAreas,
-      finalAssessment: deterministicFinalAssessment,
-      perQuestionScores,
-    } = await scoreFeedbackDeterministic({
-      transcript,
-      faceDetectionData,
-      interview,
-    });
-
-    // Bring back AI-written narrative (but keep algorithmic scores)
     const formattedTranscript = Array.isArray(transcript)
-      ? transcript
-          .map((sentence) => `- ${sentence.role}: ${sentence.content}\n`)
-          .join("")
+      ? transcript.map((s) => `- ${s.role}: ${s.content}\n`).join("")
       : "";
 
     const faceSummary = (() => {
       if (!faceDetectionData) return "";
-      const base = `Face Detection Summary:`;
+      const base = "Face Detection Summary:";
       if (faceDetectionData.isDetected === false) {
         return `\n${base} No reliable face detected during the call.`;
       }
       const parts = [];
       if (typeof faceDetectionData.averageConfidence === "number") {
         parts.push(
-          `Avg confidence ${(faceDetectionData.averageConfidence * 100).toFixed(1)}%`,
+          `Avg confidence ${(faceDetectionData.averageConfidence * 100).toFixed(1)}%`
         );
       }
       if (faceDetectionData.dominantExpression) {
-        parts.push(
-          `Dominant expression ${faceDetectionData.dominantExpression}`,
-        );
+        parts.push(`Dominant expression ${faceDetectionData.dominantExpression}`);
       }
       if (
         typeof faceDetectionData.faceDetectionDuration === "number" &&
         typeof faceDetectionData.faceDetectionSamples === "number"
       ) {
         parts.push(
-          `Duration ${(faceDetectionData.faceDetectionDuration / 1000).toFixed(1)}s over ${faceDetectionData.faceDetectionSamples} samples`,
+          `Duration ${(faceDetectionData.faceDetectionDuration / 1000).toFixed(1)}s over ${faceDetectionData.faceDetectionSamples} samples`
         );
       }
       if (typeof faceDetectionData.lookingAwayRatio === "number") {
         parts.push(
-          `Looking away ${(faceDetectionData.lookingAwayRatio * 100).toFixed(1)}% of time`,
+          `Looking away ${(faceDetectionData.lookingAwayRatio * 100).toFixed(1)}% of time`
         );
       }
       if (typeof faceDetectionData.multiPersonRatio === "number") {
         parts.push(
-          `Multiple people visible ${(faceDetectionData.multiPersonRatio * 100).toFixed(1)}% of time`,
+          `Multiple people visible ${(faceDetectionData.multiPersonRatio * 100).toFixed(1)}% of time`
         );
       }
       if (typeof faceDetectionData.gazeAwayRatio === "number") {
         parts.push(
-          `Eyes off-screen/reading ${(faceDetectionData.gazeAwayRatio * 100).toFixed(1)}% of time`,
+          `Eyes off-screen/reading ${(faceDetectionData.gazeAwayRatio * 100).toFixed(1)}% of time`
         );
       }
       return parts.length ? `\n${base} ${parts.join("; ")}` : "";
     })();
 
-    let strengths = deterministicStrengths;
-    let areasForImprovement = deterministicAreas;
-    let finalAssessment = deterministicFinalAssessment;
+    const {
+      object: {
+        totalScore,
+        categoryScores: aiCategoryScores,
+        strengths,
+        areasForImprovement,
+        finalAssessment,
+      },
+    } = await generateObject({
+      model: google("gemini-2.5-flash-lite", { structuredOutputs: false }),
+      schema: feedbackSchema,
+      prompt: `You are an AI interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories. Be thorough and detailed in your analysis. Don't be lenient with the candidate. If there are mistakes or areas for improvement, point them out.
+        Transcript:
+        ${formattedTranscript}
 
-    // Replace category comments with AI summaries (same category names; keep scores)
-    let categoryScore = categoryScores;
+        ${faceSummary}
 
-    try {
-      const { object } = await generateObject({
-        model: google("gemini-2.5-flash-lite", { structuredOutputs: false }),
-        schema: feedbackNarrativeSchema,
-        prompt: `You are a professional interviewer. Write feedback text ONLY (no scores).
+        Please score the candidate from 0 to 100 in the following areas. Do not add categories other than the ones provided:
+        - **Communication Skills**: Clarity, articulation, structured responses.
+        - **Technical Knowledge**: Understanding of key concepts for the role.
+        - **Problem-Solving**: Ability to analyze problems and propose solutions.
+        - **Cultural & Role Fit**: Alignment with company values and job role.
+        - **Confidence & Clarity**: Confidence in responses, engagement, and clarity. Consider Face Detection Summary only as a soft signal for engagement (eye contact, attention, presence of other people). Do not overweight it.`,
+      system:
+        "You are a professional interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories.",
+    });
 
-          Interview context:
-          - Role: ${interview?.role || "N/A"}
-          - Level: ${interview?.level || "N/A"}
-          - Type: ${interview?.type || "N/A"}
-
-          Transcript:
-          ${formattedTranscript}
-
-          ${faceSummary}
-
-          Write:
-          1) A short but specific summary comment for EACH of these 6 categories (keep it honest and actionable):
-             - Communication Skills
-             - Technical Knowledge
-             - Problem Solving
-             - Cultural Fit
-             - Confidence and Clarity
-             - Face Detection (based on the face detection metrics/summary provided above)
-          2) Strengths (bullet-like strings).
-          3) Areas for improvement (bullet-like strings).
-          4) Final assessment (a short paragraph).
-
-          Do NOT invent categories. Do NOT output any numbers or scores.`,
-        system:
-          "You are a professional interviewer writing structured feedback text for a mock interview.",
-      });
-
-      const commentByName = new Map(
-        (object.categorySummaries || []).map((c) => [c.name, c.comment]),
-      );
-
-      categoryScore = categoryScores.map((c) => ({
-        ...c,
-        comment: commentByName.get(c.name) || c.comment,
-      }));
-
-      strengths = object.strengths?.length ? object.strengths : strengths;
-      areasForImprovement = object.areasForImprovement?.length
-        ? object.areasForImprovement
-        : areasForImprovement;
-      finalAssessment = object.finalAssessment || finalAssessment;
-    } catch (narrativeError) {
-      console.warn(
-        "Failed to generate AI narrative feedback; using deterministic text.",
-        narrativeError,
-      );
-    }
+    const faceResult = computeFaceDetectionScore(faceDetectionData);
+    const faceCategory = {
+      name: "Face Detection",
+      score: faceResult.score,
+      comment: faceResult.comment,
+    };
+    const categoryScore = [...aiCategoryScores, faceCategory];
 
     const doc = {
       interviewId,
@@ -151,19 +104,16 @@ export async function createFeedback(params) {
       strengths,
       areasForImprovement,
       finalAssessment,
-      perQuestionScores: perQuestionScores || [],
+      perQuestionScores: [],
     };
 
     let res;
     if (feedbackId) {
-      // Try to update the provided feedback id
       res = await Feedback.findByIdAndUpdate(feedbackId, doc, { new: true });
       if (!res) {
-        // If not found, create a new document
         res = await Feedback.create(doc);
       }
     } else {
-      // Ensure single feedback per (interviewId, userId) by upserting
       res = await Feedback.findOneAndUpdate({ interviewId, userId }, doc, {
         upsert: true,
         new: true,

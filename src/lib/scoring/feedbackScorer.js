@@ -218,6 +218,29 @@ function getWeights({ type }) {
   return base; // mixed/default
 }
 
+/** Returns per-category adjustment (+/-) based on question text so each question gets different scores. */
+function getQuestionCategoryAdjustment(questionText, categoryName) {
+  const q = (questionText || "").toLowerCase();
+  let delta = 0;
+  if (categoryName === "Communication Skills") {
+    if (/explain|describe|walk me through|tell me about|how would you explain/i.test(q)) delta += 4;
+    if (/summarize|clarify|articulate/i.test(q)) delta += 3;
+  } else if (categoryName === "Technical Knowledge") {
+    if (/rendering|getstaticprops|getserversideprops|client.?side|server.?side|ssr|csr/i.test(q)) delta += 5;
+    if (/fetch|async|api|component|props|state|hook|react|next/i.test(q)) delta += 4;
+    if (/accessibility|aria|semantic|a11y/i.test(q)) delta += 4;
+  } else if (categoryName === "Problem Solving") {
+    if (/imagine|building|build|implement|how would you|approach|solve/i.test(q)) delta += 5;
+    if (/challenge|issue|problem|debug/i.test(q)) delta += 3;
+  } else if (categoryName === "Cultural Fit") {
+    if (/team|collaboration|work with|feedback|culture|prefer/i.test(q)) delta += 5;
+    if (/disagree|conflict|handled/i.test(q)) delta += 4;
+  } else if (categoryName === "Confidence and Clarity") {
+    if (/confident|comfortable|unfamiliar|hesitate/i.test(q)) delta += 4;
+  }
+  return delta;
+}
+
 function normalizeMessage(msg) {
   if (!msg || typeof msg !== "object") return null;
   const content = msg.content ?? msg.transcript ?? msg.message ?? msg.text ?? "";
@@ -374,7 +397,7 @@ const FACE_DETECTION_CATEGORY = "Face Detection";
  * Separate face-detection scoring (0–100). Own category; not mixed with
  * Confidence and Clarity or transcript-based categories.
  */
-function computeFaceDetectionScore(faceDetectionData) {
+export function computeFaceDetectionScore(faceDetectionData) {
   if (!faceDetectionData) {
     return { score: 0, comment: "No face detection data recorded." };
   }
@@ -565,6 +588,7 @@ export async function scoreFeedbackDeterministic({ transcript, faceDetectionData
     for (let qi = 0; qi < perQuestionEmbeddings.length; qi++) {
       const turn = turns[qi];
       const answerText = (turn?.answer || "").trim();
+      const questionText = (turn?.question || "").trim();
       const emb = perQuestionEmbeddings[qi];
       const sims = ex.map((_, i) => cosineSimilarity(emb, exemplarEmbeddings[offset + i]));
       const raw = similarityWeightedScore(sims, ex, categoryName);
@@ -577,9 +601,10 @@ export async function scoreFeedbackDeterministic({ transcript, faceDetectionData
       } else {
         s = score; // Short but not non-answer (misalignment) – use overall
       }
+      const adj = getQuestionCategoryAdjustment(questionText, categoryName);
       perQuestionCategoryScores[qi].push({
         name: categoryName,
-        score: clamp(s, 0, 100),
+        score: clamp(s + adj, 0, 100),
         comment: isNonAnswer(answerText)
           ? "No substantive answer."
           : wordCount >= 5
