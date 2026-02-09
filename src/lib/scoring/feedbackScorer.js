@@ -142,6 +142,33 @@ function clamp(n, min, max) {
   return Math.max(min, Math.min(max, n));
 }
 
+function isNonAnswer(text) {
+  const t = (text || "").toLowerCase().trim();
+  if (!t) return true;
+  const nonAnswerPhrases = [
+    "i don't know",
+    "i dont know",
+    "don't know",
+    "dont know",
+    "i don't have",
+    "i dont have",
+    "no answer",
+    "skip",
+    "pass",
+    "not sure",
+    "i'm not sure",
+    "im not sure",
+    "can't answer",
+    "cant answer",
+    "don't have an answer",
+    "dont have an answer",
+    "no idea",
+    "next question",
+    "move on",
+  ];
+  return nonAnswerPhrases.some((p) => t.includes(p) || t === p);
+}
+
 function normalizeLevel(level) {
   const l = String(level || "").toLowerCase();
   if (l.includes("junior") || l.includes("entry")) return "junior";
@@ -535,18 +562,29 @@ export async function scoreFeedbackDeterministic({ transcript, faceDetectionData
       comment: `Closest match: ${best.label}. ${substantiveAnswers}/${totalQuestions} substantive answer(s).`,
     });
 
-    const overallCatScore = categoryScores[categoryScores.length - 1]?.score ?? 50;
     for (let qi = 0; qi < perQuestionEmbeddings.length; qi++) {
       const turn = turns[qi];
+      const answerText = (turn?.answer || "").trim();
       const emb = perQuestionEmbeddings[qi];
       const sims = ex.map((_, i) => cosineSimilarity(emb, exemplarEmbeddings[offset + i]));
       const raw = similarityWeightedScore(sims, ex, categoryName);
-      const wordCount = (turn?.answer || "").split(/\s+/).filter(Boolean).length;
-      const s = wordCount >= 5 ? clamp(Math.round(raw), 0, 100) : score;
+      const wordCount = answerText.split(/\s+/).filter(Boolean).length;
+      let s;
+      if (isNonAnswer(answerText)) {
+        s = 0;
+      } else if (wordCount >= 5) {
+        s = clamp(Math.round(raw), 0, 100);
+      } else {
+        s = score; // Short but not non-answer (misalignment) – use overall
+      }
       perQuestionCategoryScores[qi].push({
         name: categoryName,
         score: clamp(s, 0, 100),
-        comment: wordCount >= 5 ? "Derived from semantic similarity." : "Short answer; using overall impression.",
+        comment: isNonAnswer(answerText)
+          ? "No substantive answer."
+          : wordCount >= 5
+            ? "Derived from semantic similarity."
+            : "Short answer; using overall impression.",
       });
     }
 
