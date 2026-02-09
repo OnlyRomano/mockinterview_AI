@@ -22,7 +22,10 @@ const Agent = ({ userName, userId, type, interviewId, questions }) => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [callStatus, setCallStatus] = useState(CallStatus.INACTIVE);
   const [messages, setMessages] = useState([]);
+  const messagesRef = React.useRef(messages);
+  const feedbackSubmittedRef = React.useRef(false);
   const { processFaceData, startTracking, stopTracking } = useFaceDetection();
+  messagesRef.current = messages;
 
   // Log questions when they change
   useEffect(() => {
@@ -85,13 +88,19 @@ const Agent = ({ userName, userId, type, interviewId, questions }) => {
   };
 
   useEffect(() => {
-    if (callStatus === CallStatus.FINISHED) {
-      if (type === "generate") {
-        router.push("/");
-      } else {
-        handleGenerateFeedback(messages);
-      }
+    if (callStatus !== CallStatus.FINISHED) return;
+    if (type === "generate") {
+      router.push("/");
+      return;
     }
+    if (feedbackSubmittedRef.current) return;
+    // Brief delay to allow any in-flight transcript events to arrive before generating feedback
+    const timer = setTimeout(() => {
+      if (feedbackSubmittedRef.current) return;
+      feedbackSubmittedRef.current = true;
+      handleGenerateFeedback(messagesRef.current);
+    }, 1500);
+    return () => clearTimeout(timer);
   }, [messages, callStatus, type, userId]);
 
   const handleCall = async () => {

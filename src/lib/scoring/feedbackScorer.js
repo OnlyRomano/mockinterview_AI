@@ -28,14 +28,19 @@ const CATEGORIES = [
 const EXEMPLARS = {
   "Communication Skills": [
     {
-      score: 90,
+      score: 95,
       text: "I’ll start with a quick summary, then go step by step, and I’ll call out tradeoffs and assumptions as I go.",
       label: "Structured, clear, sets context",
     },
     {
-      score: 70,
-      text: "I think the main idea is this, and then we can break it into a few parts and address them one by one.",
-      label: "Mostly clear, some structure",
+      score: 75,
+      text: "I would use Next.js for server-side rendering and handle forms with React Hook Form. That way I can manage state better and provide good validation.",
+      label: "Direct, practical, explains reasoning",
+    },
+    {
+      score: 60,
+      text: "I think you could use async/await to handle requests, and maybe use Axios or fetch to get the data from the server.",
+      label: "Reasonable approach, some elaboration",
     },
     {
       score: 45,
@@ -51,8 +56,13 @@ const EXEMPLARS = {
     },
     {
       score: 70,
-      text: "I would use an index or a hash map for faster lookup, and I’d validate input types and handle null values.",
-      label: "Generally correct, moderate depth",
+      text: "Next.js handles server-side rendering, so you can fetch data on the server and pass it to components. For async operations, I'd use async/await with try-catch to handle errors properly.",
+      label: "Correct understanding of framework concepts",
+    },
+    {
+      score: 55,
+      text: "I know about async/await and how to use libraries like Axios. I've worked with form libraries to manage state.",
+      label: "Foundational knowledge, less detail on implementation",
     },
     {
       score: 40,
@@ -68,8 +78,13 @@ const EXEMPLARS = {
     },
     {
       score: 70,
-      text: "I would break it down into steps and implement a straightforward solution, then optimize if needed.",
-      label: "Reasonable approach, limited validation",
+      text: "I would suggest using relevant tools and patterns like React Hook Form for forms or async/await for asynchronous operations, then implement and test.",
+      label: "Suggests practical tools and patterns",
+    },
+    {
+      score: 55,
+      text: "I'd look for an existing library or pattern that solves similar problems and apply that approach to this situation.",
+      label: "Tool-oriented problem solving",
     },
     {
       score: 40,
@@ -85,8 +100,13 @@ const EXEMPLARS = {
     },
     {
       score: 70,
-      text: "I work well with others and I try to be proactive about updates and priorities.",
-      label: "Positive but less specific",
+      text: "I prefer specific tools like Axios and React Hook Form because they work well for me, and I'm willing to learn new approaches if the team uses something different.",
+      label: "Tool preference + adaptability",
+    },
+    {
+      score: 55,
+      text: "I have my preferred tools and I'm open to learning and adapting to what the team uses.",
+      label: "Openness to learning",
     },
     {
       score: 45,
@@ -102,8 +122,13 @@ const EXEMPLARS = {
     },
     {
       score: 70,
-      text: "I think this should work. I’d verify with a quick test and adjust if needed.",
-      label: "Moderate confidence, some uncertainty",
+      text: "I would use async/await to handle asynchronous operations. That's a solid approach and handles errors well with try-catch.",
+      label: "Speaks with moderate confidence on familiar topics",
+    },
+    {
+      score: 55,
+      text: "I think that approach could work. There might be some hesitation or pauses when explaining unfamiliar concepts.",
+      label: "Moderate confidence with some uncertainty",
     },
     {
       score: 45,
@@ -166,20 +191,26 @@ function getWeights({ type }) {
   return base; // mixed/default
 }
 
+function normalizeMessage(msg) {
+  if (!msg || typeof msg !== "object") return null;
+  const content = msg.content ?? msg.transcript ?? msg.message ?? msg.text ?? "";
+  if (typeof content !== "string") return null;
+  return { role: msg.role, content: content.trim() };
+}
+
 function extractCandidateText(transcript) {
   if (!Array.isArray(transcript)) return "";
-  // Vapi-style transcripts usually use role: "user" (candidate) and "assistant" (interviewer).
-  // If roles differ, fallback to including everything that isn't clearly the interviewer.
+  // Vapi-style: role "user"/"caller" (candidate), "assistant" (interviewer).
   const candidateLines = transcript
-    .filter((s) => s && typeof s.content === "string")
+    .map(normalizeMessage)
+    .filter(Boolean)
     .filter((s) => {
       const r = String(s.role || "").toLowerCase();
-      if (r === "user" || r === "candidate") return true;
-      if (r === "assistant" || r === "interviewer") return false;
-      // Unknown role: include (better than dropping all content)
-      return true;
+      if (r === "user" || r === "candidate" || r === "caller") return true;
+      if (r === "assistant" || r === "interviewer" || r === "agent") return false;
+      return true; // Unknown: include
     })
-    .map((s) => s.content.trim())
+    .map((s) => s.content)
     .filter(Boolean);
 
   return candidateLines.join("\n");
@@ -238,12 +269,6 @@ function splitIntoAnswerChunks(transcript) {
 }
 
 function buildTurns({ transcript, questions }) {
-  // Attempts to align transcript to interview questions.
-  // Deterministic heuristic:
-  // - Collect interviewer utterances (assistant/interviewer) as question prompts.
-  // - Each prompt starts a new turn; candidate messages attach to the latest turn.
-  // - Assign interview.question[i] to turns sequentially; later we can improve alignment by
-  //   embedding-similarity matching interviewer prompts to question strings.
   const qs = Array.isArray(questions) ? questions.filter(Boolean) : [];
   if (!Array.isArray(transcript) || transcript.length === 0) {
     return qs.map((q) => ({ question: q, answer: "" }));
@@ -251,38 +276,47 @@ function buildTurns({ transcript, questions }) {
 
   const isInterviewer = (role) => {
     const r = String(role || "").toLowerCase();
-    return r === "assistant" || r === "interviewer";
+    return r === "assistant" || r === "interviewer" || r === "agent";
   };
 
   const isCandidate = (role) => {
     const r = String(role || "").toLowerCase();
-    return r === "user" || r === "candidate";
+    return r === "user" || r === "candidate" || r === "caller";
   };
 
   const rawTurns = [];
-  for (const msg of transcript) {
-    if (!msg || typeof msg.content !== "string") continue;
-    const content = msg.content.trim();
-    if (!content) continue;
+  for (const raw of transcript) {
+    const msg = normalizeMessage(raw);
+    if (!msg || !msg.content) continue;
+    const { role, content } = msg;
 
-    if (isInterviewer(msg.role)) {
+    if (isInterviewer(role)) {
       rawTurns.push({ prompt: content, answerParts: [] });
       continue;
     }
 
-    if (isCandidate(msg.role) || !isInterviewer(msg.role)) {
+    if (isCandidate(role) || !isInterviewer(role)) {
       if (!rawTurns.length) rawTurns.push({ prompt: "", answerParts: [] });
       rawTurns[rawTurns.length - 1].answerParts.push(content);
     }
   }
 
   // Turn answers
-  const turns = rawTurns
+  let turns = rawTurns
     .map((t) => ({
       prompt: t.prompt,
       answer: t.answerParts.join("\n").trim(),
     }))
     .filter((t) => t.prompt || t.answer);
+
+  // Skip greeting turn so Q1 maps to first real Q&A (not "Hi")
+  const isGreeting = (p) => {
+    const s = (p || "").toLowerCase();
+    return s.includes("hello") || s.includes("thank you for taking") || s.includes("how are you") || (s.length < 80 && /^(hi|hello|hey)\b/i.test(s));
+  };
+  if (turns.length > qs.length && turns[0] && isGreeting(turns[0].prompt)) {
+    turns = turns.slice(1);
+  }
 
   // Assign questions sequentially (best-effort).
   // If there are fewer turns than questions, create empty-answer turns for remaining questions.
@@ -346,42 +380,42 @@ function computeFaceDetectionScore(faceDetectionData) {
 }
 
 function similarityWeightedScore(similarities, exemplars, categoryName) {
-  // Stricter scoring: only count similarities above threshold
-  // This prevents weak matches from inflating scores
-  // Use higher thresholds and penalty factors for subjective categories
-  let SIMILARITY_THRESHOLD = 0.35;
-  let PENALTY_FACTOR = 0.80;
+  // Similarity threshold: only count matches above this
+  let SIMILARITY_THRESHOLD = 0.28;
+  let PENALTY_FACTOR = 1.0;
 
-  // Apply stricter scoring to subjective categories where AI commentary tends to be more critical
   if (categoryName === "Problem Solving") {
-    SIMILARITY_THRESHOLD = 0.40;
-    PENALTY_FACTOR = 0.75;
+    SIMILARITY_THRESHOLD = 0.32;
+    PENALTY_FACTOR = 1.0;
   } else if (categoryName === "Cultural Fit") {
-    SIMILARITY_THRESHOLD = 0.40;
-    PENALTY_FACTOR = 0.72;
+    SIMILARITY_THRESHOLD = 0.32;
+    PENALTY_FACTOR = 1.0;
   } else if (categoryName === "Confidence and Clarity") {
-    SIMILARITY_THRESHOLD = 0.38;
-    PENALTY_FACTOR = 0.75;
+    SIMILARITY_THRESHOLD = 0.30;
+    PENALTY_FACTOR = 1.0;
   }
 
-  const weights = similarities.map((s) => Math.max(0, s - SIMILARITY_THRESHOLD));
+  const weights = similarities.map((s) => Math.max(0, (Number(s) || 0) - SIMILARITY_THRESHOLD));
   const denom = weights.reduce((a, b) => a + b, 0);
-  if (denom === 0) {
-    // If no strong matches, default to lower score (more strict)
-    return 30;
+  if (denom === 0 || !Number.isFinite(denom)) {
+    return 40;
   }
-  const numer = weights.reduce((sum, w, idx) => sum + w * exemplars[idx].score, 0);
+  const numer = weights.reduce((sum, w, idx) => sum + w * (exemplars[idx]?.score ?? 50), 0);
   const rawScore = numer / denom;
-  // Apply conservative penalty factor to make scores more strict
-  return rawScore * PENALTY_FACTOR;
+  const result = (Number(rawScore) || 40) * PENALTY_FACTOR;
+  return Number.isFinite(result) ? result : 40;
 }
+
+const MIN_WORDS_FOR_SCORING = 15; // Require substantive answers; short replies (yes/no, I don't know) = insufficient
 
 export async function scoreFeedbackDeterministic({ transcript, faceDetectionData, interview }) {
   const candidateText = extractCandidateText(transcript);
   const answerChunks = splitIntoAnswerChunks(transcript);
+  const candidateWordCount = (candidateText || "").split(/\s+/).filter(Boolean).length;
+  const hasInsufficientAnswers = !candidateText || candidateWordCount < MIN_WORDS_FOR_SCORING;
 
-  if (!candidateText) {
-    const neutral = 40;
+  if (hasInsufficientAnswers) {
+    const neutral = 0;
     const faceResult = computeFaceDetectionScore(faceDetectionData);
     const faceCategory = {
       name: FACE_DETECTION_CATEGORY,
@@ -391,15 +425,22 @@ export async function scoreFeedbackDeterministic({ transcript, faceDetectionData
     const baseCategories = CATEGORIES.map((name) => ({
       name,
       score: neutral,
-      comment: "Not enough transcript content to score reliably.",
+      comment:
+        candidateWordCount === 0
+          ? "No transcript content to score."
+          : "Insufficient answers provided to score reliably (too few words).",
     }));
     return {
       totalScore: neutral,
       categoryScores: [...baseCategories, faceCategory],
       strengths: [],
-      areasForImprovement: ["Provide more detailed answers so scoring can be more accurate."],
+      areasForImprovement: [
+        "Provide more detailed answers so the 5 transcript-based categories can be scored.",
+      ],
       finalAssessment:
-        "We couldn't compute a reliable score because the transcript was empty or missing candidate responses.",
+        candidateWordCount === 0
+          ? "No candidate responses were recorded. Please answer the interview questions to receive scores."
+          : "Answers were too brief to score reliably. Please provide more detailed responses to receive meaningful feedback.",
       perQuestionScores: [],
     };
   }
@@ -418,7 +459,7 @@ export async function scoreFeedbackDeterministic({ transcript, faceDetectionData
     return `Question:\n${q}\n\nAnswer:\n${a || "(no answer recorded)"}\n`;
   });
 
-  // Embed each answer chunk, plus all exemplars once.
+  // Embed answer chunks + per-question inputs + exemplars
   const exemplarList = CATEGORIES.flatMap((cat) => EXEMPLARS[cat]);
   const chunkInputs = answerChunks.length ? answerChunks : [candidateText];
   const inputs = [...chunkInputs, ...perQuestionInputs, ...exemplarList.map((e) => e.text)];
@@ -439,6 +480,27 @@ export async function scoreFeedbackDeterministic({ transcript, faceDetectionData
   const categoryScores = [];
   const perQuestionCategoryScores = turns.map(() => []);
 
+  const totalQuestions = Math.max(1, turns.length);
+  const substantiveChunks = chunkInputs.filter(
+    (c) => (c || "").split(/\s+/).filter(Boolean).length >= 5
+  ).length;
+  const substantiveAnswers = Math.max(substantiveChunks, turns.filter(
+    (t) => (t?.answer || "").split(/\s+/).filter(Boolean).length >= 5
+  ).length);
+  // Avoid zeroing out when we have content but answers are fragmented
+  let completenessFactor =
+    substantiveAnswers > 0
+      ? Math.min(1, substantiveAnswers / totalQuestions)
+      : Math.max(0.25, 1 / totalQuestions);
+  // If all content is in one chunk (e.g. only user msgs, no assistant) and it's substantial, don't penalize
+  if (
+    substantiveAnswers < totalQuestions &&
+    chunkInputs.length === 1 &&
+    (chunkInputs[0] || "").split(/\s+/).filter(Boolean).length >= 30
+  ) {
+    completenessFactor = 1;
+  }
+
   for (const categoryName of CATEGORIES) {
     const ex = EXEMPLARS[categoryName];
     const perChunkScores = [];
@@ -449,41 +511,42 @@ export async function scoreFeedbackDeterministic({ transcript, faceDetectionData
       const sims = ex.map((_, i) => cosineSimilarity(emb, exemplarEmbeddings[offset + i]));
       const rawScore = similarityWeightedScore(sims, ex, categoryName);
       perChunkScores.push(rawScore);
-
-      // Track global best match for deterministic comment
-      const localBest = sims
-        .map((s, i) => ({ s, i }))
-        .sort((a, b) => b.s - a.s)[0];
+      const localBest = sims.map((s, i) => ({ s, i })).sort((a, b) => b.s - a.s)[0];
       if (localBest && localBest.s > bestSim) {
         bestSim = localBest.s;
         best = ex[localBest.i];
       }
     }
 
-    // Aggregate across chunks (median is robust; fall back to mean)
     const sortedScores = perChunkScores.slice().sort((a, b) => a - b);
     const mid = Math.floor(sortedScores.length / 2);
     const rawScore =
-      sortedScores.length % 2 === 1
-        ? sortedScores[mid]
-        : (sortedScores[mid - 1] + sortedScores[mid]) / 2;
+      sortedScores.length === 0
+        ? 50
+        : sortedScores.length % 2 === 1
+          ? sortedScores[mid]
+          : (sortedScores[mid - 1] + sortedScores[mid]) / 2;
+    let score = clamp(Math.round(Number(rawScore) || 0), 0, 100);
+    score = Math.round(score * completenessFactor);
 
-    let score = clamp(Math.round(rawScore), 0, 100);
     categoryScores.push({
       name: categoryName,
       score,
-      comment: `Closest match: ${best.label}. Score derived from semantic similarity to labeled exemplars across ${chunkEmbeddings.length} answer chunk(s).`,
+      comment: `Closest match: ${best.label}. ${substantiveAnswers}/${totalQuestions} substantive answer(s).`,
     });
 
-    // Per-question scores for this category
+    const overallCatScore = categoryScores[categoryScores.length - 1]?.score ?? 50;
     for (let qi = 0; qi < perQuestionEmbeddings.length; qi++) {
+      const turn = turns[qi];
       const emb = perQuestionEmbeddings[qi];
       const sims = ex.map((_, i) => cosineSimilarity(emb, exemplarEmbeddings[offset + i]));
       const raw = similarityWeightedScore(sims, ex, categoryName);
+      const wordCount = (turn?.answer || "").split(/\s+/).filter(Boolean).length;
+      const s = wordCount >= 5 ? clamp(Math.round(raw), 0, 100) : score;
       perQuestionCategoryScores[qi].push({
         name: categoryName,
-        score: clamp(Math.round(raw), 0, 100),
-        comment: `Derived from semantic similarity to labeled exemplars.`,
+        score: clamp(s, 0, 100),
+        comment: wordCount >= 5 ? "Derived from semantic similarity." : "Short answer; using overall impression.",
       });
     }
 
@@ -509,6 +572,14 @@ export async function scoreFeedbackDeterministic({ transcript, faceDetectionData
       totalScore: total,
       categoryScore: cats,
     };
+  });
+
+  perQuestionScores.forEach((pq, i) => {
+    const qPreview = ((pq.question || "") + "").slice(0, 60);
+    console.log(`[Score] Question ${i + 1}: ${pq.totalScore}/100 | ${qPreview}${qPreview.length >= 60 ? "..." : ""}`);
+    pq.categoryScore?.forEach((c) => {
+      console.log(`  - ${c.name}: ${c.score}/100`);
+    });
   });
 
   const totalScore = clamp(
