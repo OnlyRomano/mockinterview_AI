@@ -24,6 +24,13 @@ const Agent = ({ userName, userId, type, interviewId, questions }) => {
   const [messages, setMessages] = useState([]);
   const { processFaceData, startTracking, stopTracking } = useFaceDetection();
 
+  // Log questions when they change
+  useEffect(() => {
+    if (questions && questions.length > 0) {
+      console.log("Agent component received questions:", questions);
+    }
+  }, [questions]);
+
   useEffect(() => {
     const onCallStart = () => setCallStatus(CallStatus.ACTIVE);
     const onCallEnd = () => setCallStatus(CallStatus.FINISHED);
@@ -112,6 +119,10 @@ const Agent = ({ userName, userId, type, interviewId, questions }) => {
         formattedQuestions = questions
           .map((question) => `- ${question}`)
           .join("\n");
+        console.log("Starting interview with questions:", questions);
+        console.log("Formatted questions for VAPI:", formattedQuestions);
+      } else {
+        console.warn("No questions provided to Agent component");
       }
       await vapi.start(interviewer, {
         variableValues: {

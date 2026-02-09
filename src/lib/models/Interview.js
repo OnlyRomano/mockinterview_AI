@@ -33,6 +33,14 @@ const InterviewSchema = new mongoose.Schema(
     coverImage: {
       type: String,
     },
+    retakeCount: {
+      type: Number,
+      default: 0,
+    },
+    maxRetakes: {
+      type: Number,
+      default: 2,
+    },
   },
   { timestamps: true }
 );

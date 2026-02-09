@@ -17,6 +17,24 @@ const CategorySchema = new mongoose.Schema(
     }, { _id : false }, { timestamps: true }
 )
 
+const PerQuestionScoreSchema = new mongoose.Schema(
+    {
+        question: {
+            type: String,
+            required: true,
+        },
+        totalScore: {
+            type: Number,
+            required: true,
+        },
+        categoryScore: {
+            type: [CategorySchema],
+            required: true,
+        },
+    },
+    { _id: false }
+);
+
 const FeedbackSchema = new mongoose.Schema(
     {
         interviewId: {
@@ -46,6 +64,10 @@ const FeedbackSchema = new mongoose.Schema(
         finalAssessment: {
             type: String,
             required: true,
+        },
+        perQuestionScores: {
+            type: [PerQuestionScoreSchema],
+            default: [],
         },
     },
     { timestamps: true }

@@ -174,6 +174,28 @@ export const feedbackSchema = z.object({
   finalAssessment: z.string(),
 });
 
+// Narrative-only schema (used when scores are computed algorithmically)
+export const feedbackNarrativeSchema = z.object({
+  categorySummaries: z
+    .array(
+      z.object({
+        name: z.enum([
+          "Communication Skills",
+          "Technical Knowledge",
+          "Problem Solving",
+          "Cultural Fit",
+          "Confidence and Clarity",
+          "Face Detection",
+        ]),
+        comment: z.string(),
+      })
+    )
+    .length(6),
+  strengths: z.array(z.string()),
+  areasForImprovement: z.array(z.string()),
+  finalAssessment: z.string(),
+});
+
 export const interviewCovers = [
   "/adobe.png",
   "/amazon.png",
