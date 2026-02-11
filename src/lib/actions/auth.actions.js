@@ -63,12 +63,14 @@ export async function signUp({ email, password, name }) {
 
     const hashedPassword = md5(password);
     const verificationToken = crypto.randomBytes(32).toString("hex");
+    const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
     const newUser = new User({ 
       email, 
       password: hashedPassword, 
       name,
       emailVerified: false,
       verificationToken,
+      verificationTokenExpiry: tokenExpiry,
     });
 
     await newUser.save();
@@ -183,6 +185,20 @@ export async function isAuthenticated() {
 export async function verifyEmail({ email, verificationToken }) {
   try {
     await dbConnect();
+    
+    // First check if user exists by email
+    const userByEmail = await User.findOne({ email });
+    
+    // If user exists and email is already verified, return already-verified status
+    if (userByEmail && userByEmail.emailVerified) {
+      return {
+        success: true,
+        message: "Your email has already been verified. You can sign in now.",
+        alreadyVerified: true,
+      };
+    }
+    
+    // Now check if token matches
     const user = await User.findOne({ email, verificationToken });
     
     if (!user) {
@@ -192,8 +208,17 @@ export async function verifyEmail({ email, verificationToken }) {
       };
     }
 
+    // Check if token has expired
+    if (user.verificationTokenExpiry && new Date() > user.verificationTokenExpiry) {
+      return {
+        success: false,
+        message: "Verification link has expired. Please sign up again to get a new link.",
+      };
+    }
+
     user.emailVerified = true;
     user.verificationToken = null;
+    user.verificationTokenExpiry = null;
     await user.save();
 
     return {

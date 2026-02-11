@@ -70,7 +70,21 @@ export default function VerifyEmailContent() {
           <div>
             <h2 style={{ color: "green" }}>✓ Email Verified!</h2>
             <p>{message}</p>
-            <p>Redirecting you to sign in...</p>
+            <p>
+              <button 
+                onClick={() => router.push("/sign-in")}
+                style={{
+                  padding: "10px 20px",
+                  backgroundColor: "#007bff",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "5px",
+                  cursor: "pointer"
+                }}
+              >
+                Go to Sign In
+              </button>
+            </p>
           </div>
         )}
         

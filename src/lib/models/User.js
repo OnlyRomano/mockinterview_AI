@@ -24,6 +24,10 @@ const UserSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    verificationTokenExpiry: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );
