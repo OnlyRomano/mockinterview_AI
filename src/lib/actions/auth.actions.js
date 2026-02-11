@@ -1,15 +1,57 @@
 "use server";
 
 import md5 from "md5";
+import crypto from "crypto";
 import User from "../models/User";
 import { getSession, saveSession, clearSession } from "../session";
 import dbConnect from "../db";
 import { redirect } from "next/dist/server/api-utils";
 import Interview from "../models/Interview";
 import { Types } from "mongoose";
+import { sendVerificationEmail } from "../sendEmail";
+
+// Password validation function
+function validatePassword(password) {
+  const errors = [];
+  
+  if (password.length < 8) {
+    errors.push("Password must be at least 8 characters long");
+  }
+  
+  if (!/[A-Z]/.test(password)) {
+    errors.push("Password must contain at least one uppercase letter");
+  }
+  
+  if (!/[a-z]/.test(password)) {
+    errors.push("Password must contain at least one lowercase letter");
+  }
+  
+  if (!/[0-9]/.test(password)) {
+    errors.push("Password must contain at least one number");
+  }
+  
+  if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+    errors.push("Password must contain at least one special character (!@#$%^&* etc.)");
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors,
+  };
+}
 
 export async function signUp({ email, password, name }) {
   try {
+    // Validate password strength
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      return {
+        success: false,
+        message: passwordValidation.errors.join(". "),
+        passwordErrors: passwordValidation.errors,
+      };
+    }
+
     await dbConnect();
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -20,7 +62,14 @@ export async function signUp({ email, password, name }) {
     }
 
     const hashedPassword = md5(password);
-    const newUser = new User({ email, password: hashedPassword, name });
+    const verificationToken = crypto.randomBytes(32).toString("hex");
+    const newUser = new User({ 
+      email, 
+      password: hashedPassword, 
+      name,
+      emailVerified: false,
+      verificationToken,
+    });
 
     await newUser.save();
 
@@ -31,9 +80,22 @@ export async function signUp({ email, password, name }) {
       };
     }
 
+    // Send verification email
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL
+    const emailResult = await sendVerificationEmail({
+      email,
+      verificationToken,
+      appUrl,
+    });
+
+    if (!emailResult.success) {
+      console.warn("Verification email failed to send:", emailResult.error);
+    }
+
     return {
       success: true,
-      message: "User created successfully. Please sign in.",
+      message: "User created successfully. Please check your email to verify your account.",
+      email,
     };
   } catch (error) {
     console.error("Error in signUp:", error);
@@ -53,6 +115,15 @@ export async function signIn({ email, password }) {
       return {
         success: false,
         message: "Invalid email or password.",
+      };
+    }
+
+    if (!user.emailVerified) {
+      return {
+        success: false,
+        message: "Email not verified. Please verify your email before signing in.",
+        requiresEmailVerification: true,
+        email: user.email,
       };
     }
 
@@ -107,5 +178,34 @@ export async function getCurrentUser() {
 export async function isAuthenticated() {
   const user = await getCurrentUser();
   return !!user;
+}
+
+export async function verifyEmail({ email, verificationToken }) {
+  try {
+    await dbConnect();
+    const user = await User.findOne({ email, verificationToken });
+    
+    if (!user) {
+      return {
+        success: false,
+        message: "Invalid verification token or email.",
+      };
+    }
+
+    user.emailVerified = true;
+    user.verificationToken = null;
+    await user.save();
+
+    return {
+      success: true,
+      message: "Email verified successfully. You can now sign in.",
+    };
+  } catch (error) {
+    console.error("Error in verifyEmail:", error);
+    return {
+      success: false,
+      message: "Failed to verify email. Please try again.",
+    };
+  }
 }
 

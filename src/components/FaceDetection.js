@@ -95,20 +95,20 @@ const FaceDetection = ({ onFaceData, isActive = true, tuning = {} }) => {
         const detection = detections[0]; // primary face
         
         // Draw face detection box
-        const { x, y, width, height } = detection.detection.box;
-        ctx.strokeStyle = '#00ff00';
-        ctx.lineWidth = 2;
-        ctx.strokeRect(x, y, width, height);
+        // const { x, y, width, height } = detection.detection.box;
+        // ctx.strokeStyle = '#00ff00';
+        // ctx.lineWidth = 2;
+        // ctx.strokeRect(x, y, width, height);
 
-        // Draw landmarks
-        if (detection.landmarks) {
-          ctx.fillStyle = '#ff0000';
-          detection.landmarks.positions.forEach(point => {
-            ctx.beginPath();
-            ctx.arc(point.x, point.y, 2, 0, 2 * Math.PI);
-            ctx.fill();
-          });
-        }
+        // // Draw landmarks
+        // if (detection.landmarks) {
+        //   ctx.fillStyle = '#ff0000';
+        //   detection.landmarks.positions.forEach(point => {
+        //     ctx.beginPath();
+        //     ctx.arc(point.x, point.y, 2, 0, 2 * Math.PI);
+        //     ctx.fill();
+        //   });
+        // }
 
         // Heuristic for looking away using eye aspect and nose direction
         let isLookingAway = false;

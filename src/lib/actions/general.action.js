@@ -83,23 +83,40 @@ export async function createFeedback(params) {
         - **Technical Knowledge**: Understanding of key concepts for the role.
         - **Problem-Solving**: Ability to analyze problems and propose solutions.
         - **Cultural & Role Fit**: Alignment with company values and job role.
-        - **Confidence & Clarity**: Confidence in responses, engagement, and clarity. Consider Face Detection Summary only as a soft signal for engagement (eye contact, attention, presence of other people). Do not overweight it.`,
+        - **Confidence & Clarity**: Confidence in responses, engagement, and clarity.`,
       system:
         "You are a professional interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories.",
     });
 
+    // Round all scores to nearest whole number
+    const roundedTotalScore = Math.round(totalScore);
+    const roundedAiCategoryScores = aiCategoryScores.map(category => ({
+      ...category,
+      score: Math.round(category.score)
+    }));
+
     const faceResult = computeFaceDetectionScore(faceDetectionData);
+    
+    // Generate AI comment for face detection
+    const { text: faceComment } = await generateText({
+      model: google("gemini-2.5-flash-lite"),
+      prompt: `Based on the following face detection data, provide a brief professional comment (2-3 sentences) about the candidate's engagement and presence:
+        ${faceSummary}
+        
+        Be constructive and focus on observable behaviors that relate to engagement and professionalism.`,
+    });
+    
     const faceCategory = {
       name: "Face Detection",
-      score: faceResult.score,
-      comment: faceResult.comment,
+      score: Math.round(faceResult.score),
+      comment: faceComment,
     };
-    const categoryScore = [...aiCategoryScores, faceCategory];
+    const categoryScore = [...roundedAiCategoryScores, faceCategory];
 
     const doc = {
       interviewId,
       userId,
-      totalScore,
+      totalScore: roundedTotalScore,
       categoryScore,
       strengths,
       areasForImprovement,

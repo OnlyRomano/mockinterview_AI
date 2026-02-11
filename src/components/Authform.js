@@ -59,7 +59,7 @@ const Authform = ({ type }) => {
           return;
         }
 
-        toast.success("Account Created Successfully Please Sign In.");
+        toast.success("Account Created Successfully. Please check your email to verify your account.");
         router.push("/sign-in");
       } else {
         const { email, password } = values;
