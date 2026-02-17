@@ -4,29 +4,14 @@ import { getCurrentUser, signOut } from '@/lib/actions/auth.actions';
 import Image from 'next/image';
 import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
-import {
-  NavigationMenu,
-  NavigationMenuContent,
-  NavigationMenuItem,
-  NavigationMenuList,
-  NavigationMenuTrigger,
-} from "@/components/ui/navigation-menu";
-import { LogOut, User, Settings } from 'lucide-react';
+import { LogOut, User } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { getLoggedInUser } from '@/lib/actions/auth.actions';
-import { 
-  DropdownMenu, 
-  DropdownMenuContent, 
-  DropdownMenuLabel, 
-  DropdownMenuTrigger,
-  DropdownMenuItem,
-  DropdownMenuSeparator 
-} from './ui/dropdown-menu';
 
 const Navbar = () => {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -43,9 +28,14 @@ const Navbar = () => {
     fetchUser();
   }, []);
   
-  const handleLogout = async () => {
+  const confirmLogout = async () => {
     await signOut();
+    setShowLogoutModal(false);
     router.push('/sign-in');
+  };
+  
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
   };
 
   return (
@@ -55,25 +45,45 @@ const Navbar = () => {
         <h2 className="text-primary-100"> HireReady AI </h2>
       </Link>
 
-      <DropdownMenu modal={false}>
-        <DropdownMenuTrigger className="flex items-center gap-2 bg-dark-100 px-2 py-2 rounded-md hover:bg-gray-800 transition">
-            <User className="size-4" />
-            {user?.name || 'User'}
-        </DropdownMenuTrigger>
-        <DropdownMenuContent 
-          align="end" 
-          sideOffset={8}
-          className="w-56 z-[60]"
+      <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 bg-dark-100 px-2 py-2 rounded-md">
+          <User className="size-4" />
+          <span>hello, {user?.name || 'User'}</span>
+        </div>
+        <button
+          onClick={handleLogoutClick}
+          className="flex items-center gap-2 bg-red-700 px-2 py-2 rounded-md hover:bg-red-500 transition text-red-200 hover:text-white"
         >
-          <DropdownMenuItem 
-            onClick={handleLogout}
-            className="cursor-pointer flex items-center gap-2 text-red-500 hover:bg-red-400 hover:text-red-500"
-          >
-            <LogOut className="size-4" />
-            Logout
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+          <LogOut className="size-4" />
+          Logout
+        </button>
+      </div>
+
+      {showLogoutModal && (
+        <>
+          <div className="fixed inset-0 backdrop-blur-md z-[99]"></div>
+          <div className="fixed inset-0 flex items-center justify-center z-[100]">
+          <div className="bg-dark-200 rounded-lg p-6 w-96 shadow-lg">
+            <h3 className="text-lg font-semibold text-white mb-2">Confirm Logout</h3>
+            <p className="text-gray-300 mb-6">Are you sure you want to logout?</p>
+            <div className="flex gap-4 justify-end">
+              <button
+                onClick={() => setShowLogoutModal(false)}
+                className="px-4 py-2 rounded-md bg-gray-700 hover:bg-gray-600 text-white transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmLogout}
+                className="px-4 py-2 rounded-md bg-red-700 hover:bg-red-500 text-red-200 transition"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+          </div>
+        </>
+      )}
     </nav>
   );
 };

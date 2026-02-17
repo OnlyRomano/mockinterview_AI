@@ -59,7 +59,9 @@ const Authform = ({ type }) => {
           return;
         }
 
-        toast.success("Account Created Successfully. Please check your email to verify your account.");
+        toast.success(
+          "Account Created Successfully. Please check your email to verify your account.",
+        );
         router.push("/sign-in");
       } else {
         const { email, password } = values;
@@ -123,7 +125,7 @@ const Authform = ({ type }) => {
               <FormField
                 control={form.control}
                 name="name"
-                label="Name"
+                label="Username"
                 placeholder="e.g John Doe"
               />
             )}
@@ -132,7 +134,7 @@ const Authform = ({ type }) => {
               control={form.control}
               name="email"
               label="Email"
-              placeholder="e.g Example@email.com"
+              placeholder="e.g example@email.com"
               type="email"
             />
 
@@ -142,7 +144,7 @@ const Authform = ({ type }) => {
                 control={form.control}
                 name="password"
                 label="Password"
-                placeholder="•••••••••"
+                placeholder="e.g Example@123"
                 type={showPassword ? "text" : "password"}
               />
               <button
@@ -166,9 +168,7 @@ const Authform = ({ type }) => {
                   {isSignIn ? "Signing In..." : "Creating Account..."}
                 </>
               ) : (
-                <>
-                  {isSignIn ? "Sign In" : "Create an Account"}
-                </>
+                <>{isSignIn ? "Sign In" : "Create an account"}</>
               )}
             </Button>
           </form>
@@ -177,7 +177,7 @@ const Authform = ({ type }) => {
           {isSignIn ? "Don't have an account?" : "Already have an account?"}{" "}
           <Link
             href={isSignIn ? "/sign-up" : "/sign-in"}
-            className="font-bold text-primary-100 ml-1 hover:underline"
+            className="font-bold text-primary-100 ml-1 underline"
           >
             {isSignIn ? "Sign Up" : "Sign In"}
           </Link>
