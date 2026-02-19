@@ -16,7 +16,7 @@ export async function sendVerificationEmail({ email, verificationToken, appUrl }
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
-      subject: "Verify your email - Mock Interview",
+      subject: "HireReady AI - Verify Your Email",
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
           <h2>Email Verification Required</h2>
@@ -30,6 +30,7 @@ export async function sendVerificationEmail({ email, verificationToken, appUrl }
           <p><code>${verificationLink}</code></p>
           <p>This link will expire in 24 hours.</p>
           <p>If you didn't create this account, please ignore this email.</p>
+          <img src="/logo.svg" alt="HireReady AI Logo" style="width: 150px; margin-top: 20px;" />
         </div>
       `,
     };
