@@ -78,7 +78,7 @@ export async function createFeedback(params) {
 
         ${faceSummary}
 
-        Please score the candidate from 0 to 100 in the following areas. Do not add categories other than the ones provided:
+        Please score the candidate from 0 to 100 in the following areas. Do not add categories other than the ones provided and round the scores to the nearest whole number:
         - **Communication Skills**: Clarity, articulation, structured responses.
         - **Technical Knowledge**: Understanding of key concepts for the role.
         - **Problem-Solving**: Ability to analyze problems and propose solutions.
@@ -87,13 +87,6 @@ export async function createFeedback(params) {
       system:
         "You are a professional interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories.",
     });
-
-    // Round all scores to nearest whole number
-    const roundedTotalScore = Math.round(totalScore);
-    const roundedAiCategoryScores = aiCategoryScores.map(category => ({
-      ...category,
-      score: Math.round(category.score)
-    }));
 
     const faceResult = computeFaceDetectionScore(faceDetectionData);
     
@@ -111,12 +104,12 @@ export async function createFeedback(params) {
       score: Math.round(faceResult.score),
       comment: faceComment,
     };
-    const categoryScore = [...roundedAiCategoryScores, faceCategory];
+    const categoryScore = [...aiCategoryScores, faceCategory];
 
     const doc = {
       interviewId,
       userId,
-      totalScore: roundedTotalScore,
+      totalScore: totalScore,
       categoryScore,
       strengths,
       areasForImprovement,

@@ -36,10 +36,56 @@ const Agent = ({ userName, userId, type, interviewId, questions }) => {
     const onCallEnd = () => setCallStatus(CallStatus.FINISHED);
 
     const onMessage = (message) => {
-      if (message.type === "transcript" && message.transcriptType === "final") {
-        const newMessage = { role: message.role, content: message.transcript };
-        setMessages((prev) => [...prev, newMessage]);
+      if (process.env.NODE_ENV === "development" && type === "generate") {
+        console.log("[VAPI message]", message?.type, message?.role, message);
       }
+
+      if (message.type === "conversation-update") {
+        const list = message.messages ?? message.conversation ?? [];
+        const newEntries = list
+          .map((m) => {
+            const content = (m.message ?? m.content ?? m.text ?? "").trim();
+            if (!content) return null;
+            const r = String(m.role ?? "").toLowerCase();
+            const role = r === "bot" || r === "assistant" || r === "agent" ? "assistant" : "user";
+            return { role, content };
+          })
+          .filter(Boolean);
+        if (newEntries.length) {
+          setMessages((prev) => {
+            const combined = [...prev];
+            newEntries.forEach((entry) => {
+              if (!combined.length || combined[combined.length - 1].content !== entry.content) {
+                combined.push(entry);
+              }
+            });
+            return combined;
+          });
+        }
+        return;
+      }
+
+      let text = "";
+      let role = message.role ?? "user";
+      if (message.type === "transcript") {
+        const isFinal = message.transcriptType === "final";
+        text = (message.transcript || message.content || "").trim();
+        const isAssistant = ["assistant", "agent"].includes(String(role).toLowerCase());
+        if (!text) return;
+        if (!isFinal && !isAssistant) return;
+        role = isAssistant ? "assistant" : "user";
+      } else if (message.type === "model-output" || message.type === "agent-response") {
+        text = (message.content ?? message.text ?? message.message ?? message.delta ?? "").trim();
+        if (!text) return;
+        role = "assistant";
+      } else if (message.message?.role === "assistant" && (message.message?.content || message.message?.message)) {
+        text = String(message.message?.content ?? message.message?.message ?? "").trim();
+        if (!text) return;
+        role = "assistant";
+      } else {
+        return;
+      }
+      setMessages((prev) => [...prev, { role, content: text }]);
     };
     const onSpeachStart = () => setIsSpeaking(true);
     const onSpeachEnd = () => setIsSpeaking(false);
