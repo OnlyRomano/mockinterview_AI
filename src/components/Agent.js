@@ -36,10 +36,6 @@ const Agent = ({ userName, userId, type, interviewId, questions }) => {
     const onCallEnd = () => setCallStatus(CallStatus.FINISHED);
 
     const onMessage = (message) => {
-      if (process.env.NODE_ENV === "development" && type === "generate") {
-        console.log("[VAPI message]", message?.type, message?.role, message);
-      }
-
       if (message.type === "conversation-update") {
         const list = message.messages ?? message.conversation ?? [];
         const newEntries = list
@@ -161,15 +157,6 @@ const Agent = ({ userName, userId, type, interviewId, questions }) => {
       );
     } else {
       let formattedQuestions = "";
-      if (questions) {
-        formattedQuestions = questions
-          .map((question) => `- ${question}`)
-          .join("\n");
-        console.log("Starting interview with questions:", questions);
-        console.log("Formatted questions for VAPI:", formattedQuestions);
-      } else {
-        console.warn("No questions provided to Agent component");
-      }
       await vapi.start(interviewer, {
         variableValues: {
           question: formattedQuestions,
