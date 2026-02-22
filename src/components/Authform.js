@@ -15,9 +15,20 @@ import { useState } from "react";
 import { Eye, EyeOff, Loader, Loader2 } from "lucide-react";
 
 const authFormSchema = (type) => {
+  const emailSchema =
+    type === "sign-up"
+      ? z
+          .string()
+          .min(1, "Email is required")
+          .refine(
+            (val) => val.includes("@"),
+            "Please enter a valid email address containing @ and .com"
+          )
+      : z.string().email("Please enter a valid email address");
+
   return z.object({
     name: type === "sign-up" ? z.string().min(3) : z.string().optional(),
-    email: z.string().email(),
+    email: emailSchema,
     password: z.string().min(8),
   });
 };
@@ -94,6 +105,15 @@ const Authform = ({ type }) => {
     const allEmpty = fields.every((v) => !v || String(v).trim() === "");
     if (allEmpty) {
       toast.error("Please fill in all fields.");
+      return;
+    }
+
+    if (errors?.email) {
+      toast.error(
+        type === "sign-up"
+          ? "Please enter a valid email address containing @"
+          : "Please enter a valid email address."
+      );
       return;
     }
 

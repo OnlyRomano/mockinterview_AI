@@ -71,13 +71,13 @@ const Navbar = () => {
                 onClick={() => setShowLogoutModal(false)}
                 className="px-4 py-2 rounded-md bg-gray-700 hover:bg-gray-600 text-white transition"
               >
-                Cancel
+                No, Stay Logged In
               </button>
               <button
                 onClick={confirmLogout}
                 className="px-4 py-2 rounded-md bg-red-700 hover:bg-red-500 text-red-200 transition"
               >
-                Logout
+                Yes, Logout
               </button>
             </div>
           </div>
