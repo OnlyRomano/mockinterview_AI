@@ -157,6 +157,13 @@ const Agent = ({ userName, userId, type, interviewId, questions }) => {
       );
     } else {
       let formattedQuestions = "";
+      if (questions) {
+        formattedQuestions = questions
+          .map((question) => `- ${question}`)
+          .join("\n");
+      } else {
+        console.warn("No questions provided to Agent component");
+      }
       await vapi.start(interviewer, {
         variableValues: {
           question: formattedQuestions,
