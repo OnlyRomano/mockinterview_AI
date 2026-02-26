@@ -65,7 +65,7 @@ export async function createFeedback(params) {
     })();
 
     const { object } = await generateObject({
-      model: google("gemini-2.5-flash-lite", {
+      model: google("gemini-2.5-flash", {
         structuredOutputs: false,
       }),
       schema: feedbackSchema,
@@ -89,7 +89,7 @@ export async function createFeedback(params) {
     
     // Generate AI comment for face detection
     const { text: faceComment } = await generateText({
-      model: google("gemini-2.5-flash-lite"),
+      model: google("gemini-2.5-flash"),
       prompt: `Based on the following face detection data, provide a brief professional comment (2-3 sentences) about the candidate's engagement and presence:
         ${faceSummary}
         
@@ -101,15 +101,30 @@ export async function createFeedback(params) {
       score: Math.round(faceResult.score),
       comment: faceComment,
     };
-    const categoryScore = Array.isArray(object.categoryScores)
-      ? [...object.categoryScores, faceCategory]
-      : [faceCategory];
+
+    const baseCategories = Array.isArray(object.categoryScores)
+      ? object.categoryScores
+      : [];
+
+    const categoryScore = [...baseCategories, faceCategory];
+
+    // Compute totalScore from the 5 verbal categories only (exclude Face Detection)
+    const numericScores = baseCategories
+      .map((c) => (typeof c.score === "number" ? c.score : null))
+      .filter((s) => s !== null);
+
+    const totalScore =
+      numericScores.length > 0
+        ? Math.round(
+            numericScores.reduce((sum, s) => sum + s, 0) / numericScores.length
+          )
+        : 0;
 
     const doc = {
       interviewId,
       userId,
-      totalScore: object.totalScore,
-      categoryScore, // original AI categories plus Face Detection
+      totalScore,
+      categoryScore, // 5 Gemini categories plus Face Detection
       strengths: object.strengths,
       areasForImprovement: object.areasForImprovement,
       finalAssessment: object.finalAssessment,
@@ -326,7 +341,7 @@ export async function regenerateQuestionsForRetake(interviewId) {
     const amount = interview.question.length; // Keep the same number of questions
 
     const { text: questions } = await generateText({
-      model: google("gemini-2.5-flash-lite"),
+      model: google("gemini-2.5-flash"),
       prompt: `You are generating a NEW set of interview questions for a retake interview. The candidate has already answered different questions, so you MUST create COMPLETELY NEW questions.
 
             Job Details:
