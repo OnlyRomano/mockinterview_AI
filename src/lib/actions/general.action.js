@@ -16,9 +16,12 @@ export async function createFeedback(params) {
   try {
     await dbConnect();
 
-    const formattedTranscript = Array.isArray(transcript)
-      ? transcript.map((s) => `- ${s.role}: ${s.content}\n`).join("")
-      : "";
+    const formattedTranscript = transcript
+      .map(
+        (sentence) =>
+          `- ${sentence.role}: ${sentence.content}\n`
+      )
+      .join("");
 
     const faceSummary = (() => {
       if (!faceDetectionData) return "";
@@ -61,31 +64,25 @@ export async function createFeedback(params) {
       return parts.length ? `\n${base} ${parts.join("; ")}` : "";
     })();
 
-    const {
-      object: {
-        totalScore,
-        categoryScores: aiCategoryScores,
-        strengths,
-        areasForImprovement,
-        finalAssessment,
-      },
-    } = await generateObject({
-      model: google("gemini-2.5-flash-lite", { structuredOutputs: false }),
+    const { object } = await generateObject({
+      model: google("gemini-2.5-flash-lite", {
+        structuredOutputs: false,
+      }),
       schema: feedbackSchema,
-      prompt: `You are an AI interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories. Be thorough and detailed in your analysis. Don't be lenient with the candidate. If there are mistakes or areas for improvement, point them out.
+      prompt: `
+        You are an AI interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories. Be thorough and detailed in your analysis. Don't be lenient with the candidate. If there are mistakes or areas for improvement, point them out.
         Transcript:
         ${formattedTranscript}
 
-        ${faceSummary}
-
-        Please score the candidate from 0 to 100 in the following areas. Do not add categories other than the ones provided and round the scores to the nearest whole number:
+        Please score the candidate from 0 to 100 in the following areas. Do not add categories other than the ones provided:
         - **Communication Skills**: Clarity, articulation, structured responses.
         - **Technical Knowledge**: Understanding of key concepts for the role.
         - **Problem-Solving**: Ability to analyze problems and propose solutions.
         - **Cultural & Role Fit**: Alignment with company values and job role.
-        - **Confidence & Clarity**: Confidence in responses, engagement, and clarity.`,
+        - **Confidence & Clarity**: Confidence in responses, engagement, and clarity.
+        `,
       system:
-        "You are a professional interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories.",
+        "You are a professional interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories",
     });
 
     const faceResult = computeFaceDetectionScore(faceDetectionData);
@@ -104,17 +101,18 @@ export async function createFeedback(params) {
       score: Math.round(faceResult.score),
       comment: faceComment,
     };
-    const categoryScore = [...aiCategoryScores, faceCategory];
+    const categoryScore = Array.isArray(object.categoryScores)
+      ? [...object.categoryScores, faceCategory]
+      : [faceCategory];
 
     const doc = {
       interviewId,
       userId,
-      totalScore: totalScore,
-      categoryScore,
-      strengths,
-      areasForImprovement,
-      finalAssessment,
-      perQuestionScores: [],
+      totalScore: object.totalScore,
+      categoryScore, // original AI categories plus Face Detection
+      strengths: object.strengths,
+      areasForImprovement: object.areasForImprovement,
+      finalAssessment: object.finalAssessment,
     };
 
     let res;
