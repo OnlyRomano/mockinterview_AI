@@ -6,8 +6,6 @@ import React, { useEffect, useState } from "react";
 import { vapi } from "@/lib/vapi.sdk";
 import { interviewer } from "@/constants";
 import { createFeedback } from "@/lib/actions/general.action";
-import FaceDetection from "./FaceDetection";
-import { useFaceDetection } from "@/hooks/useFaceDetection";
 import PropTypes from "prop-types";
 
 const CallStatus = {
@@ -22,7 +20,6 @@ const Agent = ({ userName, userId, type, interviewId, questions }) => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [callStatus, setCallStatus] = useState(CallStatus.INACTIVE);
   const [messages, setMessages] = useState([]);
-  const { processFaceData, startTracking, stopTracking } = useFaceDetection();
 
   // Log questions when they change
   useEffect(() => {
@@ -108,14 +105,10 @@ const Agent = ({ userName, userId, type, interviewId, questions }) => {
   const handleGenerateFeedback = async (messages) => {
     console.log("Generating Feedback...");
 
-    // Stop face detection and get aggregated data
-    const faceDetectionData = stopTracking();
-
     const { success, feedbackId: id } = await createFeedback({
       interviewId: interviewId,
       userId: userId,
       transcript: messages,
-      faceDetectionData: faceDetectionData,
     });
 
     if (success && id) {
@@ -138,9 +131,6 @@ const Agent = ({ userName, userId, type, interviewId, questions }) => {
 
   const handleCall = async () => {
     setCallStatus(CallStatus.CONNECTING);
-
-    // Start face detection tracking
-    startTracking();
 
     if (type === "generate") {
       await vapi.start(
@@ -212,20 +202,6 @@ const Agent = ({ userName, userId, type, interviewId, questions }) => {
                 className="object-cover rounded-full size-[120px]"
               />
               <h3>{userName}</h3>
-            </div>
-          </div>
-        )}
-        {/* Face Detection Component - keep mounted; control camera via isActive */}
-        {type !== "generate" && (
-          <div className="card-border">
-            <div className="card-content">
-              <FaceDetection
-                onFaceData={processFaceData}
-                isActive={
-                  callStatus === CallStatus.ACTIVE ||
-                  callStatus === CallStatus.CONNECTING
-                }
-              />
             </div>
           </div>
         )}

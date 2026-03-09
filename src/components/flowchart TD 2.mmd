@@ -1,0 +1,95 @@
+flowchart TD
+    Start([User Visits App]) --> CheckAuth{Session<br/>Cookie Exists?}
+    
+    CheckAuth -->|No| CheckRoute1{Protected<br/>Route?}
+    CheckRoute1 -->|Yes| Redirect1["Redirect to<br/>/sign-in"]
+    CheckRoute1 -->|No| SelectAction["User Chooses:<br/>Sign In or Sign Up"]
+    
+    Redirect1 --> SelectAction
+    
+    CheckAuth -->|Yes| CheckRoute2{Protected<br/>Route?}
+    CheckRoute2 -->|Yes| AllowAccess["Allow Access"]
+    CheckRoute2 -->|No| Redirect2["Redirect to<br/>Home /"]
+    
+    SelectAction -->|Sign Up| SignUpFlow["SIGN UP FLOW"]
+    SelectAction -->|Sign In| SignInFlow["SIGN IN FLOW"]
+    
+    SignUpFlow --> SUP1["User Enters:<br/>- Email<br/>- Password<br/>- Name"]
+    SUP1 --> SUP2["Validate Password:<br/>- Min 8 chars<br/>- Uppercase<br/>- Lowercase<br/>- Number<br/>- Special Char"]
+    
+    SUP2 --> SUP2Valid{Password<br/>Valid?}
+    SUP2Valid -->|No| SUP3Error["Return Error:<br/>Password Requirements"]
+    SUP3Error --> SUP1
+    
+    SUP2Valid -->|Yes| SUP4["Connect Database"]
+    SUP4 --> SUP5["Check if User<br/>Already Exists"]
+    
+    SUP5 --> SUP5Exists{User<br/>Exists?}
+    SUP5Exists -->|Yes| SUP6Error["Return Error:<br/>User Already Exists"]
+    SUP6Error --> SUP1
+    
+    SUP5Exists -->|No| SUP7["Hash Password<br/>with MD5"]
+    SUP7 --> SUP8["Generate<br/>32-byte<br/>Verification Token"]
+    SUP8 --> SUP9["Set Token Expiry<br/>24 hours"]
+    
+    SUP9 --> SUP10["Create User Document:<br/>- emailVerified: false<br/>- verificationToken<br/>- tokenExpiry"]
+    SUP10 --> SUP11["Save to Database"]
+    
+    SUP11 --> SUP12["Send Verification<br/>Email with Link"]
+    SUP12 --> SUP13["Return Success:<br/>Check Email"]
+    SUP13 --> EmailVerFlow
+    
+    SignInFlow --> SIP1["User Enters:<br/>- Email<br/>- Password"]
+    SIP1 --> SIP2["Connect Database"]
+    SIP2 --> SIP3["Hash Password<br/>with MD5"]
+    SIP3 --> SIP4["Query User by<br/>Email + Password"]
+    
+    SIP4 --> SIP5{User<br/>Found?}
+    SIP5 -->|No| SIP6Error["Return Error:<br/>Invalid Credentials"]
+    SIP6Error --> SIP1
+    
+    SIP5 -->|Yes| SIP7{Email<br/>Verified?}
+    SIP7 -->|No| SIP8Error["Return Error:<br/>Verify Email First"]
+    SIP8Error --> EmailVerFlow
+    
+    SIP7 -->|Yes| SIP9["Create Session:<br/>- userId<br/>- email<br/>- name<br/>- isLoggedIn: true"]
+    
+    SIP9 --> SIP10["Save Session to<br/>Iron-Session Cookie:<br/>- Name: HireReady<br/>- Max Age: 7 days<br/>- HttpOnly: true<br/>- Secure: true prod"]
+    
+    SIP10 --> SIP11["Return Success"]
+    SIP11 --> AllowAccess
+    
+    EmailVerFlow["EMAIL VERIFICATION FLOW"] --> EVP1["User Clicks Link<br/>with Token"]
+    EVP1 --> EVP2["Extract Email<br/>& Token from URL"]
+    EVP2 --> EVP3["Query User by<br/>Email & Token"]
+    
+    EVP3 --> EVP4{User &<br/>Token Found?}
+    EVP4 -->|No| EVP5Error["Return Error:<br/>Invalid Token"]
+    EVP5Error --> SelectAction
+    
+    EVP4 -->|Yes| EVP6{Token<br/>Expired?}
+    EVP6 -->|Yes| EVP7Error["Return Error:<br/>Link Expired<br/>Sign Up Again"]
+    EVP7Error --> SelectAction
+    
+    EVP6 -->|No| EVP8["Mark Email<br/>as Verified"]
+    EVP8 --> EVP9["Clear Verification<br/>Token & Expiry"]
+    EVP9 --> EVP10["Save to Database"]
+    EVP10 --> EVP11["Return Success:<br/>Ready to Sign In"]
+    EVP11 --> SelectAction
+    
+    AllowAccess --> MainApp["User Accesses:<br/>- Home Page<br/>- Interview Pages"]
+    
+    MainApp --> SignOut["User Action:<br/>Sign Out"]
+    SignOut --> SO1["Clear Session<br/>Cookie"]
+    SO1 --> SO2["Redirect to<br/>/sign-in"]
+    SO2 --> Start
+    
+    style Start fill:#90EE90
+    style SignUpFlow fill:#FFB6C1
+    style SignInFlow fill:#87CEEB
+    style EmailVerFlow fill:#FFD700
+    style AllowAccess fill:#90EE90
+    style MainApp fill:#98FB98
+    style SUP2 fill:#FFF0F5
+    style SIP9 fill:#E6F3FF
+    style SIP10 fill:#E6F3FF

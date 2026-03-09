@@ -1,0 +1,55 @@
+flowchart TD
+    Start([Start: scoreFeedbackDeterministic]) --> Input["Input:<br/>- Transcript<br/>- Face Detection Data<br/>- Interview Info"]
+    Input --> Extract["Extract Candidate Text<br/>from Transcript"]
+    Extract --> ValidateAnswers{"Sufficient<br/>Answers?<br/>Min 15 words"}
+    
+    ValidateAnswers -->|No| InsufficientAnswer["Return Neutral Score<br/>All Categories: 0<br/>+ Face Detection Score"]
+    InsufficientAnswer --> End1([End: Return Insufficient])
+    
+    ValidateAnswers -->|Yes| ProcessTurns["Build Q&A Turns<br/>from Transcript"]
+    ProcessTurns --> ChunkAnswers["Split Transcript<br/>into Answer Chunks"]
+    ChunkAnswers --> PrepareEmbedding["Prepare Inputs for<br/>Gemini Embedding:<br/>- Answer Chunks<br/>- Per-Question Inputs<br/>- Exemplars per Category"]
+    
+    PrepareEmbedding --> GeminiEmbed["Gemini API:<br/>embedMany()<br/>Generate Embeddings"]
+    GeminiEmbed --> EmbeddingsReady["Embeddings Ready:<br/>- Chunk Embeddings<br/>- Per-Question Embeddings<br/>- Exemplar Embeddings"]
+    
+    EmbeddingsReady --> LoopCategories["For Each Category<br/>Communication Skills<br/>Technical Knowledge<br/>Problem Solving<br/>Cultural Fit<br/>Confidence & Clarity"]
+    
+    LoopCategories --> CalcSimilarity["Calculate Cosine<br/>Similarity:<br/>Candidate Embedding<br/>vs<br/>Exemplar Embeddings"]
+    
+    CalcSimilarity --> SimilarityScore["similarityWeightedScore():<br/>- Apply Threshold<br/>- Weight by Similarity<br/>- Compute Weighted Average<br/>of Exemplar Scores"]
+    
+    SimilarityScore --> MedianScore["Calculate Median<br/>Score from All Chunks"]
+    
+    MedianScore --> ApplyFactor["Apply Completeness<br/>Factor:<br/>Score × substantiveAnswers/totalQuestions"]
+    
+    ApplyFactor --> GenerateComment["Generate Category<br/>Comment:<br/>Closest Exemplar Label +<br/>Answer Completeness Info"]
+    
+    GenerateComment --> PerQuestionScore["Calculate Per-Question<br/>Category Scores:<br/>Apply Question-Specific<br/>Adjustments"]
+    
+    PerQuestionScore --> StoreCategory["Store Category:<br/>- Name<br/>- Score 0-100<br/>- Comment from Exemplar"]
+    
+    StoreCategory --> MoreCategories{"More<br/>Categories?"}
+    MoreCategories -->|Yes| LoopCategories
+    MoreCategories -->|No| CalcFaceScore["computeFaceDetectionScore()<br/>- Face Confidence<br/>- Looking Away Ratio<br/>- Gaze Away Ratio<br/>- Multi-Person Ratio<br/>→ Score 0-100"]
+    
+    CalcFaceScore --> CalcWeights["Get Category Weights<br/>Based on Interview Type:<br/>- Technical<br/>- Behavioral<br/>- Mixed"]
+    
+    CalcWeights --> CalcTotal["Calculate Total Score:<br/>Σ(category_score ×<br/>category_weight)"]
+    
+    CalcTotal --> ExtractStrengths["Extract Strengths<br/>Categories with Score ≥ 65<br/>Top 3"]
+    
+    ExtractStrengths --> ExtractImprovements["Extract Areas<br/>for Improvement<br/>Categories with Score ≤ 60<br/>Top 3"]
+    
+    ExtractImprovements --> BuildAssessment["Build Final Assessment:<br/>Total Score<br/>+ Strengths<br/>+ Improvements<br/>+ Interview Type & Level"]
+    
+    BuildAssessment --> ReturnResult["Return Result:<br/>- totalScore<br/>- categoryScores with Comments<br/>- strengths<br/>- areasForImprovement<br/>- finalAssessment<br/>- perQuestionScores"]
+    
+    ReturnResult --> End2([End: Return Scoring Result])
+    
+    style Start fill:#90EE90
+    style GeminiEmbed fill:#FFB6C1
+    style GenerateComment fill:#87CEEB
+    style CalcFaceScore fill:#87CEEB
+    style End1 fill:#FFD700
+    style End2 fill:#90EE90

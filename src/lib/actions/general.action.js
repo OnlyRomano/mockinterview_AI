@@ -1,68 +1,29 @@
 "use server";
 
-import { generateObject, generateText } from "ai";
+import { generateObject } from "ai";
 import { google } from "@ai-sdk/google";
 import { feedbackSchema } from "@/constants";
 import dbConnect from "../db";
 import Feedback from "../models/Feedback";
 import Interview from "../models/Interview";
 import questionIndexer from "../databank/questionIndexer";
-import { computeFaceDetectionScore } from "../scoring/feedbackScorer";
+import User from "../models/User";
+import { sendFeedbackEmail } from "../sendEmail";
 
 export async function createFeedback(params) {
-  const { interviewId, userId, transcript, feedbackId, faceDetectionData } =
-    params;
+  const { interviewId, userId, transcript, feedbackId } = params;
 
   try {
     await dbConnect();
 
-    const formattedTranscript = transcript
-      .map(
-        (sentence) =>
-          `- ${sentence.role}: ${sentence.content}\n`
-      )
-      .join("");
-
-    const faceSummary = (() => {
-      if (!faceDetectionData) return "";
-      const base = "Face Detection Summary:";
-      if (faceDetectionData.isDetected === false) {
-        return `\n${base} No reliable face detected during the call.`;
-      }
-      const parts = [];
-      if (typeof faceDetectionData.averageConfidence === "number") {
-        parts.push(
-          `Avg confidence ${(faceDetectionData.averageConfidence * 100).toFixed(1)}%`
-        );
-      }
-      if (faceDetectionData.dominantExpression) {
-        parts.push(`Dominant expression ${faceDetectionData.dominantExpression}`);
-      }
-      if (
-        typeof faceDetectionData.faceDetectionDuration === "number" &&
-        typeof faceDetectionData.faceDetectionSamples === "number"
-      ) {
-        parts.push(
-          `Duration ${(faceDetectionData.faceDetectionDuration / 1000).toFixed(1)}s over ${faceDetectionData.faceDetectionSamples} samples`
-        );
-      }
-      if (typeof faceDetectionData.lookingAwayRatio === "number") {
-        parts.push(
-          `Looking away ${(faceDetectionData.lookingAwayRatio * 100).toFixed(1)}% of time`
-        );
-      }
-      if (typeof faceDetectionData.multiPersonRatio === "number") {
-        parts.push(
-          `Multiple people visible ${(faceDetectionData.multiPersonRatio * 100).toFixed(1)}% of time`
-        );
-      }
-      if (typeof faceDetectionData.gazeAwayRatio === "number") {
-        parts.push(
-          `Eyes off-screen/reading ${(faceDetectionData.gazeAwayRatio * 100).toFixed(1)}% of time`
-        );
-      }
-      return parts.length ? `\n${base} ${parts.join("; ")}` : "";
-    })();
+    const formattedTranscript = Array.isArray(transcript)
+      ? transcript
+          .map(
+            (sentence) =>
+              `- ${sentence.role}: ${sentence.content}\n`
+          )
+          .join("")
+      : "";
 
     const { object } = await generateObject({
       model: google("gemini-2.5-flash", {
@@ -85,31 +46,11 @@ export async function createFeedback(params) {
         "You are a professional interviewer analyzing a mock interview. Your task is to evaluate the candidate based on structured categories",
     });
 
-    const faceResult = computeFaceDetectionScore(faceDetectionData);
-    
-    // Generate AI comment for face detection
-    const { text: faceComment } = await generateText({
-      model: google("gemini-2.5-flash"),
-      prompt: `Based on the following face detection data, provide a brief professional comment (2-3 sentences) about the candidate's engagement and presence:
-        ${faceSummary}
-        
-        Be constructive and focus on observable behaviors that relate to engagement and professionalism.`,
-    });
-    
-    const faceCategory = {
-      name: "Face Detection",
-      score: Math.round(faceResult.score),
-      comment: faceComment,
-    };
-
-    const baseCategories = Array.isArray(object.categoryScores)
+    const categoryScores = Array.isArray(object.categoryScores)
       ? object.categoryScores
       : [];
 
-    const categoryScore = [...baseCategories, faceCategory];
-
-    // Compute totalScore from the 5 verbal categories only (exclude Face Detection)
-    const numericScores = baseCategories
+    const numericScores = categoryScores
       .map((c) => (typeof c.score === "number" ? c.score : null))
       .filter((s) => s !== null);
 
@@ -124,7 +65,7 @@ export async function createFeedback(params) {
       interviewId,
       userId,
       totalScore,
-      categoryScore, // 5 Gemini categories plus Face Detection
+      categoryScore: categoryScores,
       strengths: object.strengths,
       areasForImprovement: object.areasForImprovement,
       finalAssessment: object.finalAssessment,
@@ -142,6 +83,27 @@ export async function createFeedback(params) {
         new: true,
         setDefaultsOnInsert: true,
       });
+    }
+
+    // Attempt to send feedback email to the user's registered email
+    try {
+      if (userId) {
+        const [user, interview] = await Promise.all([
+          User.findById(userId).lean(),
+          Interview.findById(interviewId).lean(),
+        ]);
+
+        const to = user?.email;
+        if (to) {
+          await sendFeedbackEmail({
+            to,
+            interview,
+            feedback: res.toObject ? res.toObject() : res,
+          });
+        }
+      }
+    } catch (emailError) {
+      console.warn("Failed to send feedback email:", emailError);
     }
 
     return {
@@ -299,21 +261,12 @@ export async function regenerateQuestionsForRetake(interviewId) {
       return { success: false, error: "Interview not found" };
     }
 
-    // Initialize retakeCount and maxRetakes if they don't exist (for old interviews)
-    const retakeCount = interview.retakeCount || 0;
-    const maxRetakes = interview.maxRetakes || 3;
-
-    // Check if retake limit has been reached
-    if (retakeCount >= maxRetakes) {
-      console.log(`Retake limit reached: ${retakeCount}/${maxRetakes}`);
-      return {
-        success: false,
-        error: `Maximum retakes (${maxRetakes}) reached for this interview`,
-      };
-    }
+    const previousRetakeCount = interview.retakeCount || 0;
 
     console.log(
-      `Regenerating questions for interview ${interviewId}, retake ${retakeCount + 1}/${maxRetakes}`,
+      `Regenerating questions for interview ${interviewId}, retake ${
+        previousRetakeCount + 1
+      } (no maximum limit)`,
     );
     console.log(`Previous questions to exclude:`, interview.question);
 
@@ -439,8 +392,7 @@ export async function regenerateQuestionsForRetake(interviewId) {
 
     // Update interview with new questions and increment retake count
     interview.question = finalQuestions;
-    interview.retakeCount = retakeCount + 1;
-    interview.maxRetakes = maxRetakes; // Ensure maxRetakes is set
+    interview.retakeCount = previousRetakeCount + 1;
     await interview.save();
 
     console.log(
