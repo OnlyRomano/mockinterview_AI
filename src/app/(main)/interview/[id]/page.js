@@ -47,7 +47,7 @@ const page = async ({ params }) => {
       console.log(`Using ${questions.length} regenerated questions:`, questions);
     } else {
       console.error("Failed to regenerate questions:", result.error || "No questions returned");
-      // If retake limit reached, redirect to feedback page with error
+      // If regeneration fails, redirect to feedback page with error
       const errorMsg = result.error || "Failed to regenerate questions";
       redirect(`/interview/${id}/feedback?error=${encodeURIComponent(errorMsg)}`);
     }

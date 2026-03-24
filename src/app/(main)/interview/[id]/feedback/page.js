@@ -12,7 +12,6 @@ import React from "react";
 
 const page = async ({ params, searchParams }) => {
   const { id } = await params;
-  const searchParamsResolved = await searchParams;
   const user = await getCurrentUser();
 
   const interview = await getInterviewById(id);
@@ -22,11 +21,6 @@ const page = async ({ params, searchParams }) => {
     interviewId: id,
     userId: user?.id,
   });
-
-  const retakeCount = interview.retakeCount || 0;
-  const maxRetakes = interview.maxRetakes || 2;
-  const canRetake = retakeCount < maxRetakes;
-  const errorMessage = searchParamsResolved?.error;
 
   return (
     <section className="section-feedback backdrop-blur-md p-4 rounded-2xl">
@@ -61,32 +55,9 @@ const page = async ({ params, searchParams }) => {
             </p>
           </div>
 
-          {/* Retake Count */}
-          <div className="flex flex-row gap-2 items-center">
-            <p>
-              Retakes:{" "}
-              <span className="text-primary-200 font-bold">
-                {retakeCount}/{maxRetakes}
-              </span>
-            </p>
-          </div>
+          
         </div>
       </div>
-
-      {errorMessage && (
-        <div className="bg-red-500/20 border border-red-500 text-red-200 p-4 rounded-lg mt-4">
-          <p className="font-semibold">Error: {errorMessage}</p>
-        </div>
-      )}
-
-      {!canRetake && (
-        <div className="bg-yellow-500/20 border border-yellow-500 text-yellow-200 p-4 rounded-lg mt-4">
-          <p className="font-semibold">
-            Maximum retakes reached. You have used all {maxRetakes} retake attempts for this interview.
-          </p>
-        </div>
-      )}
-
       <hr />
 
       <p>{feedback?.finalAssessment}</p>
@@ -150,24 +121,16 @@ const page = async ({ params, searchParams }) => {
           </Link>
         </Button>
 
-        {canRetake ? (
-          <Button className="btn-primary flex-1">
-            <Link
-              href={`/interview/${id}`}
-              className="flex w-full justify-center"
-            >
-              <p className="text-sm font-semibold text-black text-center">
-                Retake Interview
-              </p>
-            </Link>
-          </Button>
-        ) : (
-          <Button className="btn-primary flex-1" disabled>
-            <p className="text-sm font-semibold text-black text-center opacity-50">
-              Retake Interview (Limit Reached)
+        <Button className="btn-primary flex-1">
+          <Link
+            href={`/interview/${id}`}
+            className="flex w-full justify-center"
+          >
+            <p className="text-sm font-semibold text-black text-center">
+              Retake Interview
             </p>
-          </Button>
-        )}
+          </Link>
+        </Button>
       </div>
     </section>
   );

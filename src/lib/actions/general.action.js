@@ -6,8 +6,10 @@ import { feedbackSchema } from "@/constants";
 import dbConnect from "../db";
 import Feedback from "../models/Feedback";
 import Interview from "../models/Interview";
+import User from "../models/User";
 import questionIndexer from "../databank/questionIndexer";
 import { computeFaceDetectionScore } from "../scoring/feedbackScorer";
+import { sendInterviewFeedbackEmail } from "../sendEmail";
 
 export async function createFeedback(params) {
   const { interviewId, userId, transcript, feedbackId, faceDetectionData } =
@@ -142,6 +144,35 @@ export async function createFeedback(params) {
         new: true,
         setDefaultsOnInsert: true,
       });
+    }
+
+    // Send feedback copy to the user's email (non-blocking for main flow).
+    try {
+      const interviewDoc = await Interview.findById(interviewId).select("role").lean();
+      const user = await User.findById(userId).select("email name").lean();
+      if (user?.email) {
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+        const emailResult = await sendInterviewFeedbackEmail({
+          email: user.email,
+          userName: user.name,
+          role: interviewDoc?.role,
+          appUrl,
+          interviewId: String(interviewId),
+          feedback: {
+            totalScore,
+            categoryScore,
+            strengths: object.strengths,
+            areasForImprovement: object.areasForImprovement,
+            finalAssessment: object.finalAssessment,
+          },
+        });
+
+        if (!emailResult.success) {
+          console.warn("Feedback email failed to send:", emailResult.error);
+        }
+      }
+    } catch (emailError) {
+      console.warn("Failed while attempting to send feedback email:", emailError);
     }
 
     return {
@@ -299,21 +330,11 @@ export async function regenerateQuestionsForRetake(interviewId) {
       return { success: false, error: "Interview not found" };
     }
 
-    // Initialize retakeCount and maxRetakes if they don't exist (for old interviews)
+    // Initialize retakeCount if it doesn't exist (for old interviews)
     const retakeCount = interview.retakeCount || 0;
-    const maxRetakes = interview.maxRetakes || 3;
-
-    // Check if retake limit has been reached
-    if (retakeCount >= maxRetakes) {
-      console.log(`Retake limit reached: ${retakeCount}/${maxRetakes}`);
-      return {
-        success: false,
-        error: `Maximum retakes (${maxRetakes}) reached for this interview`,
-      };
-    }
 
     console.log(
-      `Regenerating questions for interview ${interviewId}, retake ${retakeCount + 1}/${maxRetakes}`,
+      `Regenerating questions for interview ${interviewId}, retake ${retakeCount + 1}`,
     );
     console.log(`Previous questions to exclude:`, interview.question);
 
@@ -440,7 +461,6 @@ export async function regenerateQuestionsForRetake(interviewId) {
     // Update interview with new questions and increment retake count
     interview.question = finalQuestions;
     interview.retakeCount = retakeCount + 1;
-    interview.maxRetakes = maxRetakes; // Ensure maxRetakes is set
     await interview.save();
 
     console.log(
