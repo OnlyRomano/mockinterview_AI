@@ -4,11 +4,13 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LoaderTwo } from "@/components/ui/loader";
 
 const API_BASE = "/api/admin/databank/questions";
 
 const LEVEL_OPTIONS = ["entry", "junior", "mid", "senior"];
 const TYPE_OPTIONS = ["technical", "behavioral", "mixed"];
+const PAGE_SIZE = 5;
 
 const emptyForm = {
   level: "",
@@ -41,6 +43,7 @@ export default function DatabankAdmin() {
   const [filterLevel, setFilterLevel] = useState("all");
   const [filterType, setFilterType] = useState("all");
   const [filterTechstack, setFilterTechstack] = useState("all");
+  const [page, setPage] = useState(1);
 
   const techstackOptions = useMemo(() => {
     const set = new Set(items.map((i) => i.techstack).filter(Boolean));
@@ -55,6 +58,23 @@ export default function DatabankAdmin() {
       return true;
     });
   }, [items, filterLevel, filterType, filterTechstack]);
+
+  const totalPages = useMemo(() => {
+    return Math.max(1, Math.ceil(filteredItems.length / PAGE_SIZE));
+  }, [filteredItems.length]);
+
+  const pageItems = useMemo(() => {
+    const start = (page - 1) * PAGE_SIZE;
+    return filteredItems.slice(start, start + PAGE_SIZE);
+  }, [filteredItems, page]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [filterLevel, filterType, filterTechstack]);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
 
   function closeModal() {
     setModalType(null);
@@ -146,8 +166,19 @@ export default function DatabankAdmin() {
     }
   }
 
+  if (loading) {
+    return (
+      <div className="max-w-5xl mx-auto p-6">
+        <div className="bg-dark-200/20 border border-dark-200 rounded-xl p-10 flex flex-col items-center justify-center gap-3">
+          <LoaderTwo />
+          <p className="text-primary-200 font-semibold">Loading databank questions...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-5xl">
+    <div className="max-w-5xl mx-auto p-6">
       {error && (
         <div className="bg-red-500/15 border border-red-500 text-red-200 p-4 rounded-lg mb-4">
           {error}
@@ -167,7 +198,13 @@ export default function DatabankAdmin() {
         <div className="flex flex-col gap-3 mb-4">
           <div className="flex items-center justify-between gap-4">
             <div className="text-sm text-primary-200">
-              {loading ? "Loading..." : `${filteredItems.length} items`}
+              {loading ? (
+                <span className="inline-flex items-center gap-2">
+                  <LoaderTwo /> Loading...
+                </span>
+              ) : (
+                `Showing ${pageItems.length} of ${filteredItems.length} • Page ${page} of ${totalPages}`
+              )}
             </div>
             <div className="flex gap-3">
               <Button
@@ -178,6 +215,7 @@ export default function DatabankAdmin() {
                   setFilterLevel("all");
                   setFilterType("all");
                   setFilterTechstack("all");
+                  setPage(1);
                 }}
               >
                 Reset Filters
@@ -246,61 +284,101 @@ export default function DatabankAdmin() {
               </tr>
             </thead>
             <tbody>
-              {filteredItems.map((item) => (
-                <tr key={item._id} className="border-t border-dark-200/60">
-                  <td className="py-3 pr-3 text-sm">{item.level}</td>
-                  <td className="py-3 pr-3 text-sm">{item.techstack}</td>
-                  <td className="py-3 pr-3 text-sm">{item.type}</td>
-                  <td className="py-3">
-                    <div className="text-sm text-gray-200">
-                      {truncate(item.question)}
-                    </div>
-                  </td>
-                  <td className="py-3 pl-3">
-                    <div className="flex gap-2">
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => {
-                          setEditingId(item._id);
-                          setEditForm({
-                            level: item.level ?? "",
-                            techstack: item.techstack ?? "",
-                            type: item.type ?? "",
-                            question: item.question ?? "",
-                          });
-                          setModalType("edit");
-                        }}
-                      >
-                        Edit
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="destructive"
-                        disabled={actionLoading}
-                        onClick={() => {
-                          setDeleteId(item._id);
-                          setModalType("delete");
-                        }}
-                      >
-                        Delete
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {!loading && filteredItems.length === 0 && (
+              {loading ? (
                 <tr>
-                  <td colSpan={5} className="py-6 text-center text-gray-300">
-                    No questions match the selected filters.
+                  <td colSpan={5} className="py-10 text-center text-gray-200">
+                    <div className="flex items-center justify-center gap-3">
+                      <LoaderTwo />
+                      Loading databank questions...
+                    </div>
                   </td>
                 </tr>
+              ) : (
+                <>
+                  {pageItems.map((item) => (
+                    <tr key={item._id} className="border-t border-dark-200/60">
+                      <td className="py-3 pr-3 text-sm">{item.level}</td>
+                      <td className="py-3 pr-3 text-sm">{item.techstack}</td>
+                      <td className="py-3 pr-3 text-sm">{item.type}</td>
+                      <td className="py-3">
+                        <div className="text-sm text-gray-200">
+                          {truncate(item.question)}
+                        </div>
+                      </td>
+                      <td className="py-3 pl-3">
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="secondary"
+                            onClick={() => {
+                              setEditingId(item._id);
+                              setEditForm({
+                                level: item.level ?? "",
+                                techstack: item.techstack ?? "",
+                                type: item.type ?? "",
+                                question: item.question ?? "",
+                              });
+                              setModalType("edit");
+                            }}
+                          >
+                            Edit
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="destructive"
+                            disabled={actionLoading}
+                            onClick={() => {
+                              setDeleteId(item._id);
+                              setModalType("delete");
+                            }}
+                          >
+                            Delete
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {filteredItems.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={5}
+                        className="py-6 text-center text-gray-300"
+                      >
+                        No questions match the selected filters.
+                      </td>
+                    </tr>
+                  )}
+                </>
               )}
             </tbody>
           </table>
         </div>
+
+        {filteredItems.length > 0 && (
+          <div className="flex items-center justify-between gap-4 mt-4">
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={page <= 1 || actionLoading}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+            >
+              Prev
+            </Button>
+            <div className="text-sm text-primary-200">
+              Page {page} of {totalPages}
+            </div>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={page >= totalPages || actionLoading}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            >
+              Next
+            </Button>
+          </div>
+        )}
       </div>
 
       {modalType && (

@@ -110,7 +110,7 @@ export const interviewer = {
     voiceId: "sarah",
     stability: 0.4,
     similarityBoost: 0.8,
-    speed: 0.9,
+    speed: 0.7,
     style: 0.5,
     useSpeakerBoost: true,
   },

@@ -23,7 +23,7 @@ const page = async () => {
   if (!isAdminUser(user)) redirect("/");
 
   return (
-    <div className="p-6">
+    <div className="p-4">
       <h1 className="text-2xl font-bold mb-4">Databank Admin</h1>
       <DatabankAdmin />
     </div>
