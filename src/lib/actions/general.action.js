@@ -160,6 +160,7 @@ export async function createFeedback(params) {
           interviewId: String(interviewId),
           feedback: {
             totalScore,
+            createdAt: res?.createdAt ?? null,
             categoryScore,
             strengths: object.strengths,
             areasForImprovement: object.areasForImprovement,
@@ -340,10 +341,10 @@ export async function regenerateQuestionsForRetake(interviewId) {
 
     // Get reference questions from databank
     const techstackString = interview.techstack.join(",");
-    const referenceQuestions = questionIndexer.getReferenceQuestions(
+    const referenceQuestions = await questionIndexer.getReferenceQuestions(
       interview.level,
       techstackString,
-      interview.type,
+      interview.type
     );
 
     // Get the previous questions that were already used (to exclude them)

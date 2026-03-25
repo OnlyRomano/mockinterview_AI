@@ -2,7 +2,6 @@ import dbConnect from "@/lib/db";
 import Interview from "@/lib/models/Interview";
 import { google } from "@ai-sdk/google";
 import { generateText } from "ai";
-import { isAuthenticated } from "@/lib/actions/auth.actions";
 import questionIndexer from "@/lib/databank/questionIndexer";
 
 export async function GET() {
@@ -15,7 +14,11 @@ export async function POST(request) {
 
   try {
     // Get reference questions from databank to guide AI generation
-    const referenceQuestions = questionIndexer.getReferenceQuestions(level, techstack, type);
+    const referenceQuestions = await questionIndexer.getReferenceQuestions(
+      level,
+      techstack,
+      type
+    );
     
     // Create a comprehensive prompt that includes reference questions
     const referenceQuestionsText = referenceQuestions.length > 0 

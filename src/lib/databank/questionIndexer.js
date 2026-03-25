@@ -1,9 +1,22 @@
-import interviewQuestions from './interview-questions.json';
+import interviewQuestions from "./interview-questions.json";
+import dbConnect from "../db";
+import DatabankQuestion from "../models/DatabankQuestion";
 
 class QuestionIndexer {
   constructor() {
-    this.questions = interviewQuestions.questions;
-    this.indexes = this.buildIndexes();
+    this.questions = [];
+    this.indexes = this.buildEmptyIndexes();
+    this.loaded = false;
+    this.loadingPromise = null;
+  }
+
+  buildEmptyIndexes() {
+    return {
+      byLevel: {},
+      byType: {},
+      byTechstack: {},
+      byCombination: {},
+    };
   }
 
   buildIndexes() {
@@ -44,8 +57,63 @@ class QuestionIndexer {
     return indexes;
   }
 
-  getReferenceQuestions(level, techstack, type) {
-    const techstackArray = techstack.split(",").map(tech => tech.trim());
+  async loadQuestions() {
+    await dbConnect();
+
+    const existingCount = await DatabankQuestion.countDocuments();
+    if (existingCount === 0) {
+      const seed = Array.isArray(interviewQuestions?.questions)
+        ? interviewQuestions.questions.map((q) => ({
+            level: q.level,
+            techstack: q.techstack,
+            type: q.type,
+            question: q.question,
+          }))
+        : [];
+
+      if (seed.length > 0) {
+        await DatabankQuestion.insertMany(seed, { ordered: false });
+      }
+    }
+
+    const questions = await DatabankQuestion.find({})
+      .select("level techstack type question")
+      .lean();
+
+    this.questions = questions;
+    this.indexes = this.buildIndexes();
+    this.loaded = true;
+  }
+
+  async ensureLoaded() {
+    if (this.loaded) return;
+    if (this.loadingPromise) return this.loadingPromise;
+
+    this.loadingPromise = this.loadQuestions()
+      .catch((err) => {
+        this.loaded = false;
+        throw err;
+      })
+      .finally(() => {
+        this.loadingPromise = null;
+      });
+
+    return this.loadingPromise;
+  }
+
+  async reload() {
+    this.loaded = false;
+    this.questions = [];
+    this.indexes = this.buildEmptyIndexes();
+    return this.ensureLoaded();
+  }
+
+  async getReferenceQuestions(level, techstack, type) {
+    await this.ensureLoaded();
+
+    const techstackArray = String(techstack || "")
+      .split(",")
+      .map((tech) => tech.trim());
     
     // Strategy 1: Try exact combination first (O(1))
     for (const tech of techstackArray) {
