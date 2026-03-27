@@ -9,6 +9,7 @@ import { createFeedback } from "@/lib/actions/general.action";
 import FaceDetection from "./FaceDetection";
 import { useFaceDetection } from "@/hooks/useFaceDetection";
 import PropTypes from "prop-types";
+import { Button } from "@/components/ui/button";
 
 const CallStatus = {
   INACTIVE: "INACTIVE",
@@ -188,37 +189,35 @@ const Agent = ({ userName, userId, type, interviewId, questions }) => {
         {/* AI intervier */}
         <div className="card-interviewer">
           <div className="avatar">
-            <Image
-              src={"/ai-avatar.png"}
-              alt="AI Avatar"
-              width={40}
-              height={40}
-              className="object-cover"
-            />
-
             {isSpeaking && <span className="animate-speak" />}
           </div>
-          <h3>AI interviewer</h3>
+          <div className="text-center">
+            <h3 className="text-foreground">AI interviewer</h3>
+            <p className="text-sm text-muted-foreground">Real-time voice interview</p>
+          </div>
         </div>
         {/* User */}
         {type === "generate" && (
-          <div className="card-border">
-            <div className="card-content">
+          <div className="card-interviewer">
+            <div className="avatar">
               <Image
-                src={"/user-avatar.png"}
+                src={"/profile.svg"}
                 alt="User Avatar"
                 width={30}
                 height={30}
-                className="object-cover rounded-full size-[120px]"
+                className="object-cover rounded-full size-[120px] border border-border shadow-[var(--shadow-sm)] bg-card"
               />
-              <h3>{userName}</h3>
+            </div>
+            <div className="text-center">
+              <h3 className="text-foreground">{userName}</h3>
+              <p className="text-sm text-muted-foreground">Candidate</p>
             </div>
           </div>
         )}
         {/* Face Detection Component - keep mounted; control camera via isActive */}
         {type !== "generate" && (
           <div className="card-border">
-            <div className="card-content">
+            <div className="card-content h-full p-0 overflow-hidden">
               <FaceDetection
                 onFaceData={processFaceData}
                 isActive={
@@ -231,7 +230,7 @@ const Agent = ({ userName, userId, type, interviewId, questions }) => {
         )}
       </div>
 
-      <div>
+      <div className="mt-8">
         {messages.length > 0 && (
           <div className="transcript-border">
             <div className="transcript">
@@ -248,28 +247,35 @@ const Agent = ({ userName, userId, type, interviewId, questions }) => {
           </div>
         )}
 
-        <div className="w-full flex justify-center mt-5">
+        <div className="w-full flex justify-center mt-6">
           {callStatus !== "ACTIVE" ? (
-            <button
-              className="relative btn-call cursor-pointer"
+            <Button
+              type="button"
+              className={cn(
+                "relative rounded-full px-8 h-12 text-base",
+                callStatus === "CONNECTING" && "cursor-wait"
+              )}
+              disabled={callStatus === "CONNECTING"}
               onClick={handleCall}
             >
               <span
                 className={cn(
-                  "absolute animate-ping rounded-full opacity-75",
+                  "absolute inset-0 -z-10 rounded-full animate-ping bg-primary/30",
                   callStatus !== "CONNECTING" && "hidden"
                 )}
               />
 
               <span>{iscallInactiveOrFinished ? "Call" : "..."}</span>
-            </button>
+            </Button>
           ) : (
-            <button
-              className="btn-disconnect cursor-pointer"
+            <Button
+              type="button"
+              variant="destructive"
+              className="rounded-full px-8 h-12 text-base"
               onClick={handleDisconnect}
             >
               End
-            </button>
+            </Button>
           )}
         </div>
       </div>

@@ -23,7 +23,7 @@ const page = async ({ params, searchParams }) => {
   });
 
   return (
-    <section className="section-feedback backdrop-blur-md p-4 rounded-2xl">
+    <section className="section-feedback p-6 rounded-3xl bg-card border border-border shadow-[var(--shadow-sm)]">
       <div className="flex flex-row justify-center">
         <h1 className="text-4xl font-semibold">
           Feedback on the Interview -{" "}
@@ -38,7 +38,7 @@ const page = async ({ params, searchParams }) => {
             <Image src="/star.svg" width={22} height={22} alt="star" />
             <p>
               Overall Impression:{" "}
-              <span className="text-primary-200 font-bold">
+              <span className="text-primary font-bold">
                 {feedback?.totalScore}
               </span>
               /100
@@ -84,9 +84,10 @@ const page = async ({ params, searchParams }) => {
           {feedback.categoryScore
             .filter((c) => c.name === "Face Detection")
             .map((category, index) => (
-              <div key={index} className="bg-dark-200/40 p-4 rounded-xl">
+              <div key={index} className="bg-gray-50 border border-gray-200 p-4 rounded-xl">
                 <p className="font-bold">
-                  {category.name}: <span className="text-primary-200">{category.score}</span>/100
+                  {category.name}:{" "}
+                  <span className="text-primary font-semibold">{category.score}</span>/100
                 </p>
                 <p>{category.comment}</p>
               </div>
@@ -113,22 +114,22 @@ const page = async ({ params, searchParams }) => {
       </div>
 
       <div className="buttons">
-        <Button className="btn-secondary flex-1">
-          <Link href="/" className="flex w-full justify-center">
-            <p className="text-sm font-semibold text-primary-200 text-center">
-              Back to dashboard
-            </p>
+        <Button
+          asChild
+          variant="secondary"
+          className="flex-1 rounded-full h-10 px-5 shadow-[var(--shadow-sm)]"
+        >
+          <Link href="/" className="w-full justify-center">
+            Back to dashboard
           </Link>
         </Button>
 
-        <Button className="btn-primary flex-1">
-          <Link
-            href={`/interview/${id}`}
-            className="flex w-full justify-center"
-          >
-            <p className="text-sm font-semibold text-black text-center">
-              Retake Interview
-            </p>
+        <Button
+          asChild
+          className="flex-1 rounded-full h-10 px-5 shadow-[var(--shadow-sm)]"
+        >
+          <Link href={`/interview/${id}`} className="w-full justify-center">
+            Retake Interview
           </Link>
         </Button>
       </div>

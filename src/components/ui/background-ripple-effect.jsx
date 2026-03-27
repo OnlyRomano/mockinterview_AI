@@ -11,14 +11,14 @@ export const BackgroundRippleEffect = ({
   const [rippleKey, setRippleKey] = useState(0);
   const ref = useRef(null);
 
-  // Automated ripple every 10 seconds
+  // Automated ripple
   useEffect(() => {
     const interval = setInterval(() => {
       const row = Math.floor(Math.random() * rows);
       const col = Math.floor(Math.random() * cols);
       setClickedCell({ row, col });
       setRippleKey((k) => k + 1);
-    }, 5000); // 5 seconds
+    }, 8000);
 
     return () => clearInterval(interval);
   }, [rows, cols]);
@@ -28,15 +28,14 @@ export const BackgroundRippleEffect = ({
       ref={ref}
       className={cn(
         "absolute inset-0 h-full w-full",
-        "[--cell-border-color:var(--color-neutral-300)] [--cell-fill-color:var(--color-neutral-100)] [--cell-shadow-color:var(--color-neutral-500)]",
-        "dark:[--cell-border-color:var(--color-neutral-700)] dark:[--cell-fill-color:var(--color-neutral-900)] dark:[--cell-shadow-color:var(--color-neutral-800)]"
+        "[--cell-border-color:color-mix(in oklab, var(--color-border) 75%, white)] [--cell-fill-color:color-mix(in oklab, var(--color-background) 55%, white)] [--cell-shadow-color:color-mix(in oklab, var(--color-border) 55%, black)]"
       )}
     >
       <div className="relative h-auto w-auto overflow-hidden mask-bottom-fade">
         <div className="pointer-events-none absolute inset-0 z-[2] h-full w-full overflow-hidden" />
         <DivGrid
           key={`base-${rippleKey}`}
-          className="mask-radial-from-20% mask-radial-at-top opacity-600"
+          className="mask-radial-from-20% mask-radial-at-top opacity-50"
           rows={rows}
           cols={cols}
           cellSize={cellSize}
@@ -59,8 +58,8 @@ const DivGrid = ({
   rows = 7,
   cols = 30,
   cellSize = 56,
-  borderColor = "#3f3f46",
-  fillColor = "rgba(14,165,233,0.3)",
+  borderColor = "rgba(148,163,184,0.35)",
+  fillColor = "rgba(99,102,241,0.08)",
   clickedCell = null,
   onCellClick = () => {},
   interactive = true,
@@ -101,7 +100,7 @@ const DivGrid = ({
           <div
             key={idx}
             className={cn(
-              "cell relative border-[0.5px] opacity-40 transition-opacity duration-150 will-change-transform hover:opacity-80 dark:shadow-[0px_0px_40px_1px_var(--cell-shadow-color)_inset]",
+              "cell relative border-[0.5px] opacity-30 transition-opacity duration-150 will-change-transform hover:opacity-60 shadow-[0px_0px_30px_0px_var(--cell-shadow-color)_inset]",
               clickedCell && "animate-cell-ripple [animation-fill-mode:none]",
               !interactive && "pointer-events-none"
             )}

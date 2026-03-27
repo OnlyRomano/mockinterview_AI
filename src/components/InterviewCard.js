@@ -1,4 +1,3 @@
-import { getRandomInterviewCover } from "@/lib/utils";
 import dayjs from "dayjs";
 import Image from "next/image";
 import React from "react";
@@ -21,11 +20,14 @@ const InterviewCard = async ({
     feedback?.createdAt || createdAt || date.now()
   ).format("MMM D, YYYY");
   return (
-    <div className="card-border w-[360px] max-sm:w-full min-h-60">
-      <div className="card-interview">
+    <div className="w-[360px] max-sm:w-full min-h-60">
+      <div className="bg-card border border-border shadow-[var(--shadow-sm)] rounded-3xl p-6 relative flex flex-col gap-6 min-h-60">
         <div>
-          <div className="absolute top-0 right-0 w-fit px-4 py-2 rounded-bl-lg bg-light-600">
-            <p className="badge-text">{normalizedTyoe}</p>
+          <div className="flex items-start justify-between gap-3">
+            <h3 className="capitalize text-foreground pr-2">{role} Interview</h3>
+            <div className="shrink-0 w-fit px-3 py-1.5 rounded-full bg-secondary text-secondary-foreground border border-border">
+              <p className="text-xs font-semibold tracking-wide">{normalizedTyoe}</p>
+            </div>
           </div>
           {/* <Image
             src={getRandomInterviewCover()}
@@ -35,8 +37,6 @@ const InterviewCard = async ({
             className="rounded-full object-fit size-[90px]"
           /> */}
 
-          <h3 className="mt-5 capitalize">{role} Interview</h3>
-
           <div className="flex flex-row gap-5 mt-3">
             <div className="flex flex-row gap-2">
               <Image
@@ -45,30 +45,25 @@ const InterviewCard = async ({
                 width={22}
                 height={22}
               />
-              <p>{formattedDate}</p>
+              <p className="text-sm text-muted-foreground">{formattedDate}</p>
             </div>
             <div className="flex flex-row gap-2 items-center">
               <Image src={"/star.svg"} alt="star" width={22} height={22} />
-              <p>{feedback?.totalScore || "---"} / 100</p>
+              <p className="text-sm text-muted-foreground">
+                <span className="font-semibold text-foreground">{feedback?.totalScore || "---"}</span> / 100
+              </p>
             </div>
           </div>
 
-          <p className="line-clamp-2 mt-5" title={feedback?.finalAssessment}>
-            {" "}
+          <p className="line-clamp-2 mt-5 text-sm text-muted-foreground" title={feedback?.finalAssessment}>
             {feedback?.finalAssessment ||
               "Yout haven't taken the interview yet. Take it now to improve your skills."}
           </p>
         </div>
-        <div className="flex flex-row justify-between">
+        <div className="flex flex-row items-center justify-between pt-2">
           <DisplayTechIcons techStack={techstack}/>
-          <Button className="btn-primary">
-            <Link
-              href={
-                feedback
-                  ? `/interview/${id}/feedback`
-                  : `/interview/${id}`
-              }
-            >
+          <Button asChild className="rounded-full px-5 h-10">
+            <Link href={feedback ? `/interview/${id}/feedback` : `/interview/${id}`}>
               {feedback ? "Check Feedback" : "Start Interview"}
             </Link>
           </Button>

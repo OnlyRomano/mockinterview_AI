@@ -169,9 +169,9 @@ export default function DatabankAdmin() {
   if (loading) {
     return (
       <div className="max-w-5xl mx-auto p-6">
-        <div className="bg-dark-200/20 border border-dark-200 rounded-xl p-10 flex flex-col items-center justify-center gap-3">
+        <div className="bg-gray-50 border border-gray-200 rounded-xl p-10 flex flex-col items-center justify-center gap-3">
           <LoaderTwo />
-          <p className="text-primary-200 font-semibold">Loading databank questions...</p>
+          <p className="text-primary-foreground font-semibold">Loading databank questions...</p>
         </div>
       </div>
     );
@@ -180,12 +180,12 @@ export default function DatabankAdmin() {
   return (
     <div className="max-w-5xl mx-auto p-6">
       {error && (
-        <div className="bg-red-500/15 border border-red-500 text-red-200 p-4 rounded-lg mb-4">
+        <div className="bg-destructive/10 border border-destructive/30 text-foreground p-4 rounded-2xl mb-4">
           {error}
         </div>
       )}
 
-      <div className="bg-dark-200/40 border border-dark-200 rounded-xl p-4 mb-6">
+      <div className="bg-card border border-border rounded-3xl p-4 mb-6 shadow-[var(--shadow-sm)]">
         <div className="flex items-center justify-between gap-4">
           <h2 className="text-xl font-bold">Databank Questions</h2>
           <Button type="button" onClick={() => setModalType("create")} disabled={actionLoading}>
@@ -194,10 +194,10 @@ export default function DatabankAdmin() {
         </div>
       </div>
 
-      <div className="bg-dark-200/20 border border-dark-200 rounded-xl p-4">
-        <div className="flex flex-col gap-3 mb-4">
+      <div className="bg-card border border-border rounded-3xl p-4 shadow-[var(--shadow-sm)]">
+            <div className="flex flex-col gap-3 mb-4">
           <div className="flex items-center justify-between gap-4">
-            <div className="text-sm text-primary-200">
+            <div className="text-sm text-primary-foreground">
               {loading ? (
                 <span className="inline-flex items-center gap-2">
                   <LoaderTwo /> Loading...
@@ -229,7 +229,7 @@ export default function DatabankAdmin() {
               <select
                 value={filterLevel}
                 onChange={(e) => setFilterLevel(e.target.value)}
-                className="w-full rounded-lg border border-dark-100 bg-gray-50 p-2.5 text-black dark:bg-zinc-800 dark:text-white dark:[color-scheme:dark]"
+                className="w-full rounded-lg border border-gray-200 bg-gray-50 p-2.5 text-black dark:bg-zinc-800 dark:text-white dark:[color-scheme:dark]"
               >
                 <option value="all">All levels</option>
                 {LEVEL_OPTIONS.map((lvl) => (
@@ -244,7 +244,7 @@ export default function DatabankAdmin() {
               <select
                 value={filterType}
                 onChange={(e) => setFilterType(e.target.value)}
-                className="w-full rounded-lg border border-dark-100 bg-gray-50 p-2.5 text-black dark:bg-zinc-800 dark:text-white dark:[color-scheme:dark]"
+                className="w-full rounded-lg border border-gray-200 bg-gray-50 p-2.5 text-black dark:bg-zinc-800 dark:text-white dark:[color-scheme:dark]"
               >
                 <option value="all">All types</option>
                 {TYPE_OPTIONS.map((t) => (
@@ -259,7 +259,7 @@ export default function DatabankAdmin() {
               <select
                 value={filterTechstack}
                 onChange={(e) => setFilterTechstack(e.target.value)}
-                className="w-full rounded-lg border border-dark-100 bg-gray-50 p-2.5 text-black dark:bg-zinc-800 dark:text-white dark:[color-scheme:dark]"
+                className="w-full rounded-lg border border-gray-200 bg-gray-50 p-2.5 text-black dark:bg-zinc-800 dark:text-white dark:[color-scheme:dark]"
               >
                 <option value="all">All techstacks</option>
                 {techstackOptions.map((t) => (
@@ -275,7 +275,7 @@ export default function DatabankAdmin() {
         <div className="overflow-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="text-sm text-primary-200">
+              <tr className="text-sm text-primary-foreground">
                 <th className="py-2 pr-3">Level</th>
                 <th className="py-2 pr-3">Techstack</th>
                 <th className="py-2 pr-3">Type</th>
@@ -286,7 +286,7 @@ export default function DatabankAdmin() {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={5} className="py-10 text-center text-gray-200">
+                  <td colSpan={5} className="py-10 text-center text-gray-700">
                     <div className="flex items-center justify-center gap-3">
                       <LoaderTwo />
                       Loading databank questions...
@@ -296,12 +296,12 @@ export default function DatabankAdmin() {
               ) : (
                 <>
                   {pageItems.map((item) => (
-                    <tr key={item._id} className="border-t border-dark-200/60">
+                    <tr key={item._id} className="border-t border-border">
                       <td className="py-3 pr-3 text-sm">{item.level}</td>
                       <td className="py-3 pr-3 text-sm">{item.techstack}</td>
                       <td className="py-3 pr-3 text-sm">{item.type}</td>
                       <td className="py-3">
-                        <div className="text-sm text-gray-200">
+                        <div className="text-sm text-muted-foreground">
                           {truncate(item.question)}
                         </div>
                       </td>
@@ -344,7 +344,7 @@ export default function DatabankAdmin() {
                     <tr>
                       <td
                         colSpan={5}
-                        className="py-6 text-center text-gray-300"
+                        className="py-6 text-center text-gray-600"
                       >
                         No questions match the selected filters.
                       </td>
@@ -366,7 +366,7 @@ export default function DatabankAdmin() {
             >
               Prev
             </Button>
-            <div className="text-sm text-primary-200">
+            <div className="text-sm text-primary-foreground">
               Page {page} of {totalPages}
             </div>
             <Button
@@ -383,13 +383,13 @@ export default function DatabankAdmin() {
 
       {modalType && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-white/60 backdrop-blur-sm p-4"
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) closeModal();
           }}
         >
           <div
-            className="bg-dark-200 rounded-xl w-full max-w-2xl p-4 border border-dark-100"
+            className="bg-white rounded-xl w-full max-w-2xl p-4 border border-gray-200"
             onMouseDown={(e) => e.stopPropagation()}
           >
             {modalType === "create" && (
@@ -407,7 +407,7 @@ export default function DatabankAdmin() {
                       value={form.level}
                       onChange={(e) => setForm((p) => ({ ...p, level: e.target.value }))}
                       required
-                      className="w-full rounded-lg border border-dark-100 bg-gray-50 p-2.5 text-black dark:bg-zinc-800 dark:text-white dark:[color-scheme:dark]"
+                      className="w-full rounded-lg border border-gray-200 bg-gray-50 p-2.5 text-black dark:bg-zinc-800 dark:text-white dark:[color-scheme:dark]"
                     >
                       <option value="" disabled>
                         Select level
@@ -436,7 +436,7 @@ export default function DatabankAdmin() {
                       value={form.type}
                       onChange={(e) => setForm((p) => ({ ...p, type: e.target.value }))}
                       required
-                      className="w-full rounded-lg border border-dark-100 bg-gray-50 p-2.5 text-black dark:bg-zinc-800 dark:text-white dark:[color-scheme:dark]"
+                      className="w-full rounded-lg border border-gray-200 bg-gray-50 p-2.5 text-black dark:bg-zinc-800 dark:text-white dark:[color-scheme:dark]"
                     >
                       <option value="" disabled>
                         Select type
@@ -451,7 +451,7 @@ export default function DatabankAdmin() {
                   <div className="flex flex-col gap-2 md:col-span-2">
                     <Label>Question</Label>
                     <textarea
-                      className="w-full rounded-lg border border-dark-100 bg-transparent p-3 text-black dark:text-white min-h-[120px]"
+                      className="w-full rounded-lg border border-gray-200 bg-transparent p-3 text-black dark:text-white min-h-[120px]"
                       value={form.question}
                       onChange={(e) =>
                         setForm((p) => ({ ...p, question: e.target.value }))
@@ -490,7 +490,7 @@ export default function DatabankAdmin() {
                         setEditForm((p) => ({ ...p, level: e.target.value }))
                       }
                       required
-                      className="w-full rounded-lg border border-dark-100 bg-gray-50 p-2.5 text-black dark:bg-zinc-800 dark:text-white dark:[color-scheme:dark]"
+                      className="w-full rounded-lg border border-gray-200 bg-gray-50 p-2.5 text-black dark:bg-zinc-800 dark:text-white dark:[color-scheme:dark]"
                     >
                       <option value="" disabled>
                         Select level
@@ -520,7 +520,7 @@ export default function DatabankAdmin() {
                         setEditForm((p) => ({ ...p, type: e.target.value }))
                       }
                       required
-                      className="w-full rounded-lg border border-dark-100 bg-gray-50 p-2.5 text-black dark:bg-zinc-800 dark:text-white dark:[color-scheme:dark]"
+                      className="w-full rounded-lg border border-gray-200 bg-gray-50 p-2.5 text-black dark:bg-zinc-800 dark:text-white dark:[color-scheme:dark]"
                     >
                       <option value="" disabled>
                         Select type
@@ -535,7 +535,7 @@ export default function DatabankAdmin() {
                   <div className="flex flex-col gap-2 md:col-span-2">
                     <Label>Question</Label>
                     <textarea
-                      className="w-full rounded-lg border border-dark-100 bg-transparent p-3 text-black dark:text-white min-h-[120px]"
+                      className="w-full rounded-lg border border-gray-200 bg-transparent p-3 text-black dark:text-white min-h-[120px]"
                       value={editForm.question}
                       onChange={(e) =>
                         setEditForm((p) => ({ ...p, question: e.target.value }))
@@ -573,7 +573,7 @@ export default function DatabankAdmin() {
                     Close
                   </Button>
                 </div>
-                <p className="text-gray-200 mb-4">
+                <p className="text-gray-700 mb-4">
                   Are you sure you want to delete this databank question? This cannot be undone.
                 </p>
                 <div className="flex gap-3">

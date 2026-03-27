@@ -8,7 +8,14 @@ const page = async () => {
   
   return (
     <>
-        <h3>Interview Generation</h3>
+        <div className="bg-card border border-border shadow-[var(--shadow-sm)] rounded-3xl p-6">
+          <div className="flex flex-col gap-1">
+            <h3 className="text-foreground">Create an interview</h3>
+            <p className="text-sm text-muted-foreground">
+              Generate a new interview, then start the call when you’re ready.
+            </p>
+          </div>
+        </div>
 
         <Agent userName={user?.name} userId={user?.id} type="generate"/>
     </>

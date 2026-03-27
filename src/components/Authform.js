@@ -12,7 +12,7 @@ import FormField from "./FormField";
 import { useRouter } from "next/navigation";
 import { signIn, signUp } from "@/lib/actions/auth.actions";
 import { useState } from "react";
-import { Eye, EyeOff, Loader, Loader2 } from "lucide-react";
+import { Eye, EyeOff, Loader } from "lucide-react";
 
 const authFormSchema = (type) => {
   const emailSchema =
@@ -128,13 +128,14 @@ const Authform = ({ type }) => {
   const isSignIn = type === "sign-in";
   return (
     <div className="card-border lg:min-w-[566px]">
-      <div className="flex flex-col gap-6 card py-14 px-10">
+      <div className="flex flex-col gap-6 card py-12 px-10">
         <div className="flex flex-row gap-2 justify-center">
-          <Image src="/logo.svg" alt="logo" width={32} height={38} />
-          <h2 className="text-primary-100">HireReady AI</h2>
+          <h2 className="text-foreground">HireReady AI</h2>
         </div>
         <div className="text-center">
-          <h3>Practice for your next interview</h3>
+          <p className="text-sm text-muted-foreground">
+            Practice for your next interview with structured, AI-powered feedback.
+          </p>
         </div>
         <Form {...form}>
           <form
@@ -181,7 +182,11 @@ const Authform = ({ type }) => {
               </button>
             </div>
 
-            <Button type="submit" className="btn w-full" disabled={isLoading}>
+            <Button
+              type="submit"
+              className="w-full rounded-full h-12 text-base shadow-[var(--shadow-sm)]"
+              disabled={isLoading}
+            >
               {isLoading ? (
                 <>
                   <Loader className="size-4 animate-spin" />
@@ -197,7 +202,7 @@ const Authform = ({ type }) => {
           {isSignIn ? "Don't have an account?" : "Already have an account?"}{" "}
           <Link
             href={isSignIn ? "/sign-up" : "/sign-in"}
-            className="font-bold text-primary-100 ml-1 underline"
+            className="font-semibold text-foreground ml-1 underline"
           >
             {isSignIn ? "Sign Up" : "Sign In"}
           </Link>

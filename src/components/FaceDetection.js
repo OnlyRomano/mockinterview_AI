@@ -58,8 +58,11 @@ const FaceDetection = ({ onFaceData, isActive = true, tuning = {} }) => {
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        // Attempt playback immediately; some browsers require a play() call
+        // after assigning srcObject.
+        videoRef.current.play().catch(() => {});
         videoRef.current.onloadedmetadata = () => {
-          videoRef.current.play();
+          videoRef.current.play().catch(() => {});
         };
       }
     } catch (err) {
@@ -264,7 +267,7 @@ const FaceDetection = ({ onFaceData, isActive = true, tuning = {} }) => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center p-4">
+      <div className="flex items-center justify-center p-4 w-full h-full">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-200 mx-auto mb-2"></div>
           <p>Loading face detection...</p>
@@ -275,7 +278,7 @@ const FaceDetection = ({ onFaceData, isActive = true, tuning = {} }) => {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center p-4">
+      <div className="flex items-center justify-center p-4 w-full h-full">
         <div className="text-center text-red-500">
           <p>Error: {error}</p>
         </div>
@@ -284,18 +287,17 @@ const FaceDetection = ({ onFaceData, isActive = true, tuning = {} }) => {
   }
 
   return (
-    <div className="relative">
+    <div className="relative w-full h-full overflow-hidden rounded-2xl">
       <video
         ref={videoRef}
-        className="w-full h-auto rounded-lg"
+        className="absolute inset-0 w-full h-full object-cover z-10"
         autoPlay
         muted
         playsInline
       />
       <canvas
         ref={canvasRef}
-        className="absolute top-0 left-0 w-full h-full pointer-events-none"
-        style={{ zIndex: 1 }}
+        className="absolute inset-0 w-full h-full pointer-events-none z-0"
       />
     </div>
   );

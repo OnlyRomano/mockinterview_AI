@@ -11,7 +11,7 @@ const DisplayTechIcons = async ({ techStack }) => {
         <div
           key={tech}
           className={cn(
-            "relative group bg-dark-300 rounded-full p-2 flex flex-center border border-gray-600",
+            "relative group bg-gray-100 rounded-full p-2 flex flex-center border border-gray-200",
             index >= 1 && "-ml-3"
           )}
         >
