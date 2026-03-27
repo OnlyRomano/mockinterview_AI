@@ -23,101 +23,101 @@ const page = async ({ params, searchParams }) => {
   });
 
   return (
-    <section className="section-feedback p-6 rounded-3xl bg-card border border-border shadow-[var(--shadow-sm)]">
-      <div className="flex flex-row justify-center">
-        <h1 className="text-4xl font-semibold">
-          Feedback on the Interview -{" "}
-          <span className="capitalize">{interview.role}</span> Interview
+    <section className="mx-auto w-full max-w-4xl space-y-6 rounded-3xl border border-border bg-card px-8 py-8 shadow-[var(--shadow-sm)]">
+      <header className="space-y-2">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+          Interview feedback
+        </p>
+        <h1 className="text-2xl font-semibold sm:text-3xl">
+          {interview.role} interview
         </h1>
-      </div>
+        <p className="text-sm text-muted-foreground">
+          Overall score{" "}
+          <span className="font-semibold text-primary">
+            {feedback?.totalScore ?? "--"}
+          </span>
+          /100 ·{" "}
+          {feedback?.createdAt
+            ? dayjs(feedback.createdAt).format("MMM D, YYYY h:mm A")
+            : "Date not available"}
+        </p>
+      </header>
 
-      <div className="flex flex-row justify-center ">
-        <div className="flex flex-row gap-5">
-          {/* Overall Impression */}
-          <div className="flex flex-row gap-2 items-center">
-            <Image src="/star.svg" width={22} height={22} alt="star" />
-            <p>
-              Overall Impression:{" "}
-              <span className="text-primary font-bold">
-                {feedback?.totalScore}
-              </span>
-              /100
-            </p>
-          </div>
-
-          {/* Date */}
-          <div className="flex flex-row gap-2">
-            <Image src="/calendar.svg" width={22} height={22} alt="calendar" />
-            <p>
-              {feedback?.createdAt
-                ? dayjs(feedback.createdAt).format("MMM D, YYYY h:mm A")
-                : "N/A"}
-            </p>
-          </div>
-
-          
-        </div>
-      </div>
-      <hr />
-
-      <p>{feedback?.finalAssessment}</p>
-
-      {/* Interview Breakdown (transcript-based categories only) */}
-      <div className="flex flex-col gap-4">
-        <h2>Breakdown of the Interview:</h2>
-        {feedback?.categoryScore
-          ?.filter((c) => c.name !== "Face Detection")
-          .map((category, index) => (
-            <div key={index}>
-              <p className="font-bold">
-                {index + 1}. {category.name} ({category.score}/100)
-              </p>
-              <p>{category.comment}</p>
-            </div>
-          ))}
-      </div>
-
-      {/* Face Detection – separate category with its own scoring */}
-      {feedback?.categoryScore?.some((c) => c.name === "Face Detection") && (
-        <div className="flex flex-col gap-4 mt-6">
-          <h2>Face Detection (Engagement):</h2>
-          {feedback.categoryScore
-            .filter((c) => c.name === "Face Detection")
-            .map((category, index) => (
-              <div key={index} className="bg-gray-50 border border-gray-200 p-4 rounded-xl">
-                <p className="font-bold">
-                  {category.name}:{" "}
-                  <span className="text-primary font-semibold">{category.score}</span>/100
-                </p>
-                <p>{category.comment}</p>
-              </div>
-            ))}
-        </div>
+      {feedback?.finalAssessment && (
+        <section className="mt-6 space-y-1">
+          <h2 className="text-sm font-semibold text-foreground">Overall summary</h2>
+          <p className="text-sm text-muted-foreground">
+            {feedback.finalAssessment}
+          </p>
+        </section>
       )}
 
-      <div className="flex flex-col gap-3">
-        <h3>Strengths</h3>
-        <ul>
-          {feedback?.strengths?.map((strength, index) => (
-            <li key={index}>{strength}</li>
+      <section className="mt-6 space-y-3">
+        <h2 className="text-sm font-semibold text-foreground">
+          Breakdown by category
+        </h2>
+        {feedback?.categoryScore
+          ?.filter((c) => c.name !== "Face Detection")
+          .map((category) => (
+            <div key={category.name} className="text-sm text-muted-foreground">
+              <span className="font-semibold text-foreground">
+                {category.name}
+              </span>{" "}
+              ({category.score}/100) – {category.comment}
+            </div>
           ))}
-        </ul>
-      </div>
+      </section>
 
-      <div className="flex flex-col gap-3">
-        <h3>Areas for Improvement</h3>
-        <ul>
-          {feedback?.areasForImprovement?.map((area, index) => (
-            <li key={index}>{area}</li>
-          ))}
-        </ul>
-      </div>
+      {feedback?.categoryScore?.some((c) => c.name === "Face Detection") && (
+        <section className="mt-6 space-y-2">
+          <h2 className="text-sm font-semibold text-foreground">
+            Engagement (face detection)
+          </h2>
+          {feedback.categoryScore
+            .filter((c) => c.name === "Face Detection")
+            .map((category) => (
+              <p
+                key={category.name}
+                className="text-sm text-muted-foreground"
+              >
+                <span className="font-semibold text-foreground">
+                  {category.name}
+                </span>{" "}
+                ({category.score}/100) – {category.comment}
+              </p>
+            ))}
+        </section>
+      )}
 
-      <div className="buttons">
+      <section className="mt-6 space-y-2">
+        <h3 className="text-sm font-semibold text-foreground">Strengths</h3>
+        <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          {feedback?.strengths?.length
+            ? feedback.strengths.map((strength) => (
+                <li key={strength}>{strength}</li>
+              ))
+            : <li>No strengths recorded for this session.</li>}
+        </ul>
+      </section>
+
+      <section className="mt-6 space-y-2">
+        <h3 className="text-sm font-semibold text-foreground">
+          Areas for improvement
+        </h3>
+        <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+          {feedback?.areasForImprovement?.length
+            ? feedback.areasForImprovement.map((area) => (
+                <li key={area}>{area}</li>
+              ))
+            : <li>No specific improvement areas recorded.</li>}
+        </ul>
+      </section>
+
+      <div className="mt-8 flex flex-col gap-3 sm:flex-row">
         <Button
           asChild
           variant="secondary"
-          className="flex-1 rounded-full h-10 px-5 shadow-[var(--shadow-sm)]"
+          className="flex-1 h-10 rounded-full px-5 shadow-[var(--shadow-sm)]"
         >
           <Link href="/" className="w-full justify-center">
             Back to dashboard
@@ -126,10 +126,10 @@ const page = async ({ params, searchParams }) => {
 
         <Button
           asChild
-          className="flex-1 rounded-full h-10 px-5 shadow-[var(--shadow-sm)]"
+          className="flex-1 h-10 rounded-full px-5 shadow-[var(--shadow-sm)]"
         >
           <Link href={`/interview/${id}`} className="w-full justify-center">
-            Retake Interview
+            Retake interview
           </Link>
         </Button>
       </div>

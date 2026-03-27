@@ -168,36 +168,52 @@ export default function DatabankAdmin() {
 
   if (loading) {
     return (
-      <div className="max-w-5xl mx-auto p-6">
-        <div className="bg-gray-50 border border-gray-200 rounded-xl p-10 flex flex-col items-center justify-center gap-3">
+      <div className="mx-auto flex max-w-6xl items-center justify-center px-6 py-10">
+        <div className="flex flex-col items-center justify-center gap-3 rounded-3xl border border-border bg-card px-10 py-12 shadow-[var(--shadow-sm)]">
           <LoaderTwo />
-          <p className="text-primary-foreground font-semibold">Loading databank questions...</p>
+          <p className="text-sm font-semibold text-foreground">
+            Loading databank questions…
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-5xl mx-auto p-6">
+    <div className="mx-auto max-w-6xl px-6 py-8 space-y-6">
       {error && (
         <div className="bg-destructive/10 border border-destructive/30 text-foreground p-4 rounded-2xl mb-4">
           {error}
         </div>
       )}
 
-      <div className="bg-card border border-border rounded-3xl p-4 mb-6 shadow-[var(--shadow-sm)]">
-        <div className="flex items-center justify-between gap-4">
-          <h2 className="text-xl font-bold">Databank Questions</h2>
-          <Button type="button" onClick={() => setModalType("create")} disabled={actionLoading}>
-            Add Question
-          </Button>
+      <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+            Question databank
+          </p>
+          <h1 className="text-2xl font-semibold text-foreground sm:text-3xl">
+            Interview question library
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Manage the questions used to generate mock interviews across levels,
+            tech stacks, and types.
+          </p>
         </div>
-      </div>
+        <Button
+          type="button"
+          onClick={() => setModalType("create")}
+          disabled={actionLoading}
+          className="mt-2 h-10 rounded-full px-5 text-sm font-semibold sm:mt-0"
+        >
+          Add question
+        </Button>
+      </header>
 
-      <div className="bg-card border border-border rounded-3xl p-4 shadow-[var(--shadow-sm)]">
-            <div className="flex flex-col gap-3 mb-4">
+      <div className="rounded-3xl border border-border bg-card p-5 shadow-[var(--shadow-sm)] space-y-4">
+        <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between gap-4">
-            <div className="text-sm text-primary-foreground">
+            <div className="text-sm text-primary">
               {loading ? (
                 <span className="inline-flex items-center gap-2">
                   <LoaderTwo /> Loading...
@@ -275,7 +291,7 @@ export default function DatabankAdmin() {
         <div className="overflow-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="text-sm text-primary-foreground">
+              <tr className="text-sm text-primary">
                 <th className="py-2 pr-3">Level</th>
                 <th className="py-2 pr-3">Techstack</th>
                 <th className="py-2 pr-3">Type</th>
@@ -383,24 +399,40 @@ export default function DatabankAdmin() {
 
       {modalType && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-white/60 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/20 backdrop-blur-sm px-4 py-6"
           onMouseDown={(e) => {
             if (e.target === e.currentTarget) closeModal();
           }}
         >
           <div
-            className="bg-white rounded-xl w-full max-w-2xl p-4 border border-gray-200"
+            className="w-full max-w-2xl rounded-2xl border border-border bg-card shadow-[0_22px_60px_rgba(15,23,42,0.3)] p-5 sm:p-6"
             onMouseDown={(e) => e.stopPropagation()}
           >
             {modalType === "create" && (
               <>
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-xl font-bold">Create Question</h2>
-                  <Button type="button" variant="secondary" onClick={closeModal} disabled={actionLoading}>
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-lg font-semibold text-foreground">
+                      Create question
+                    </h2>
+                    <p className="text-xs text-muted-foreground">
+                      Add a new question to the interview databank.
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={closeModal}
+                    disabled={actionLoading}
+                    className="h-8 rounded-full px-4 text-xs"
+                  >
                     Close
                   </Button>
                 </div>
-                <form onSubmit={handleCreate} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <form
+                  onSubmit={handleCreate}
+                  className="grid grid-cols-1 gap-4 md:grid-cols-2"
+                >
                   <div className="flex flex-col gap-2">
                     <Label>Level</Label>
                     <select
@@ -461,11 +493,17 @@ export default function DatabankAdmin() {
                     />
                   </div>
 
-                  <div className="md:col-span-2 flex gap-3">
-                    <Button type="submit" disabled={actionLoading} className="flex-1">
+                  <div className="md:col-span-2 flex flex-col gap-3 sm:flex-row">
+                    <Button type="submit" disabled={actionLoading} className="flex-1 rounded-full">
                       {actionLoading ? "Saving..." : "Add"}
                     </Button>
-                    <Button type="button" variant="secondary" disabled={actionLoading} onClick={closeModal}>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      disabled={actionLoading}
+                      onClick={closeModal}
+                      className="flex-1 rounded-full sm:flex-none sm:w-auto"
+                    >
                       Cancel
                     </Button>
                   </div>
@@ -475,13 +513,29 @@ export default function DatabankAdmin() {
 
             {modalType === "edit" && canEdit && (
               <>
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-xl font-bold">Edit Question</h2>
-                  <Button type="button" variant="secondary" onClick={closeModal} disabled={actionLoading}>
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-lg font-semibold text-foreground">
+                      Edit question
+                    </h2>
+                    <p className="text-xs text-muted-foreground">
+                      Update the details of this question.
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={closeModal}
+                    disabled={actionLoading}
+                    className="h-8 rounded-full px-4 text-xs"
+                  >
                     Close
                   </Button>
                 </div>
-                <form onSubmit={handleUpdate} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <form
+                  onSubmit={handleUpdate}
+                  className="grid grid-cols-1 gap-4 md:grid-cols-2"
+                >
                   <div className="flex flex-col gap-2">
                     <Label>Level</Label>
                     <select
@@ -544,8 +598,8 @@ export default function DatabankAdmin() {
                     />
                   </div>
 
-                  <div className="md:col-span-2 flex gap-3">
-                    <Button type="submit" disabled={actionLoading} className="flex-1">
+                  <div className="md:col-span-2 flex flex-col gap-3 sm:flex-row">
+                    <Button type="submit" disabled={actionLoading} className="flex-1 rounded-full">
                       {actionLoading ? "Updating..." : "Update"}
                     </Button>
                     <Button
@@ -567,20 +621,47 @@ export default function DatabankAdmin() {
 
             {modalType === "delete" && (
               <>
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-xl font-bold">Delete Question</h2>
-                  <Button type="button" variant="secondary" onClick={closeModal} disabled={actionLoading}>
+                <div className="mb-4 flex items-center justify-between gap-3">
+                  <div>
+                    <h2 className="text-lg font-semibold text-foreground">
+                      Delete question
+                    </h2>
+                    <p className="text-xs text-muted-foreground">
+                      This action cannot be undone.
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={closeModal}
+                    disabled={actionLoading}
+                    className="h-8 rounded-full px-4 text-xs"
+                  >
                     Close
                   </Button>
                 </div>
-                <p className="text-gray-700 mb-4">
-                  Are you sure you want to delete this databank question? This cannot be undone.
+                <p className="mb-4 text-sm text-muted-foreground">
+                  Are you sure you want to permanently remove this databank
+                  question? Any interviews using it will no longer see this
+                  prompt.
                 </p>
-                <div className="flex gap-3">
-                  <Button type="button" variant="destructive" disabled={actionLoading} className="flex-1" onClick={handleDelete}>
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    disabled={actionLoading}
+                    className="flex-1 rounded-full"
+                    onClick={handleDelete}
+                  >
                     {actionLoading ? "Deleting..." : "Delete"}
                   </Button>
-                  <Button type="button" variant="secondary" disabled={actionLoading} onClick={closeModal}>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    disabled={actionLoading}
+                    onClick={closeModal}
+                    className="flex-1 rounded-full sm:flex-none sm:w-auto"
+                  >
                     Cancel
                   </Button>
                 </div>

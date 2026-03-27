@@ -183,20 +183,56 @@ const Agent = ({ userName, userId, type, interviewId, questions }) => {
   const iscallInactiveOrFinished =
     callStatus === CallStatus.INACTIVE || callStatus === CallStatus.FINISHED;
 
+  const callStatusLabel =
+    callStatus === CallStatus.ACTIVE
+      ? "In call"
+      : callStatus === CallStatus.CONNECTING
+      ? "Connecting"
+      : callStatus === CallStatus.FINISHED
+      ? "Finished"
+      : "Ready";
+
   return (
-    <>
+    <section className="space-y-6">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">
+            Live mock interview
+          </p>
+          <p className="text-xs text-muted-foreground sm:text-sm">
+            Speak with the AI interviewer and see your reactions in real time.
+          </p>
+        </div>
+        <span
+          className={cn(
+            "inline-flex items-center rounded-full px-3 py-1 text-xs font-medium border",
+            callStatus === CallStatus.ACTIVE
+              ? "border-emerald-500 text-emerald-600 bg-emerald-50"
+              : callStatus === CallStatus.CONNECTING
+              ? "border-amber-500 text-amber-600 bg-amber-50"
+              : "border-border text-muted-foreground bg-card"
+          )}
+        >
+          <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-current" />
+          {callStatusLabel}
+        </span>
+      </div>
+
       <div className="call-view">
-        {/* AI intervier */}
+        {/* AI interviewer */}
         <div className="card-interviewer">
           <div className="avatar">
             {isSpeaking && <span className="animate-speak" />}
           </div>
-          <div className="text-center">
+          <div className="mt-4 text-center">
             <h3 className="text-foreground">AI interviewer</h3>
-            <p className="text-sm text-muted-foreground">Real-time voice interview</p>
+            <p className="text-sm text-muted-foreground">
+              Real-time voice interview powered by AI
+            </p>
           </div>
         </div>
-        {/* User */}
+
+        {/* User / camera */}
         {type === "generate" && (
           <div className="card-interviewer">
             <div className="avatar">
@@ -208,13 +244,13 @@ const Agent = ({ userName, userId, type, interviewId, questions }) => {
                 className="object-cover rounded-full size-[120px] border border-border shadow-[var(--shadow-sm)] bg-card"
               />
             </div>
-            <div className="text-center">
+            <div className="mt-4 text-center">
               <h3 className="text-foreground">{userName}</h3>
               <p className="text-sm text-muted-foreground">Candidate</p>
             </div>
           </div>
         )}
-        {/* Face Detection Component - keep mounted; control camera via isActive */}
+
         {type !== "generate" && (
           <div className="card-border">
             <div className="card-content h-full p-0 overflow-hidden">
@@ -230,7 +266,7 @@ const Agent = ({ userName, userId, type, interviewId, questions }) => {
         )}
       </div>
 
-      <div className="mt-8">
+      <div className="space-y-4">
         {messages.length > 0 && (
           <div className="transcript-border">
             <div className="transcript">
@@ -247,39 +283,39 @@ const Agent = ({ userName, userId, type, interviewId, questions }) => {
           </div>
         )}
 
-        <div className="w-full flex justify-center mt-6">
-          {callStatus !== "ACTIVE" ? (
+        <div className="flex w-full justify-center">
+          {callStatus !== CallStatus.ACTIVE ? (
             <Button
               type="button"
               className={cn(
-                "relative rounded-full px-8 h-12 text-base",
-                callStatus === "CONNECTING" && "cursor-wait"
+                "relative h-12 rounded-full px-8 text-base",
+                callStatus === CallStatus.CONNECTING && "cursor-wait"
               )}
-              disabled={callStatus === "CONNECTING"}
+              disabled={callStatus === CallStatus.CONNECTING}
               onClick={handleCall}
             >
               <span
                 className={cn(
                   "absolute inset-0 -z-10 rounded-full animate-ping bg-primary/30",
-                  callStatus !== "CONNECTING" && "hidden"
+                  callStatus !== CallStatus.CONNECTING && "hidden"
                 )}
               />
 
-              <span>{iscallInactiveOrFinished ? "Call" : "..."}</span>
+              <span>{iscallInactiveOrFinished ? "Start interview" : "..."}</span>
             </Button>
           ) : (
             <Button
               type="button"
               variant="destructive"
-              className="rounded-full px-8 h-12 text-base"
+              className="h-12 rounded-full px-8 text-base"
               onClick={handleDisconnect}
             >
-              End
+              End interview
             </Button>
           )}
         </div>
       </div>
-    </>
+    </section>
   );
 };
 
