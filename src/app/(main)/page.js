@@ -45,7 +45,7 @@ const HomePage = async () => {
                 asChild
                 className="h-10 rounded-full px-6 text-sm font-semibold shadow-[var(--shadow-sm)]"
               >
-                <Link href={"/interview"}>Start a mock interview</Link>
+                <Link href={"/interview"}>Create an interview</Link>
               </Button>
             </div>
 

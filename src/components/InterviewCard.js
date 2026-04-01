@@ -78,7 +78,7 @@ const InterviewCard = async ({
               className="h-9 w-full rounded-full px-5 text-xs font-semibold shadow-[var(--shadow-sm)] sm:h-10 sm:text-sm"
             >
               <Link href={isCompleted ? `/interview/${id}/feedback` : `/interview/${id}`}>
-                {isCompleted ? "View Feedback" : "Start Interview"}
+                {isCompleted ? "View Feedback" : "Start an interview"}
               </Link>
             </Button>
           </div>
